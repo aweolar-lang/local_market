@@ -61,7 +61,7 @@ export default function PaymentPage() {
     }
   };
 
-  if (isLoading) return <div className="p-8 text-center text-gray-500">Loading payment details...</div>;
+  if (isLoading) return <div className="p-8 text-center text-gray-600">Loading payment details...</div>;
   if (!item) return <div className="p-8 text-center text-red-500">Item not found.</div>;
 
   return (

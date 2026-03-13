@@ -7,6 +7,16 @@ import { User } from '@supabase/supabase-js';
 import { Camera, DollarSign, MapPin, Tag, AlignLeft, Image as ImageIcon, Phone, X } from "lucide-react"; 
 import Image from "next/image";
 
+const KENYAN_COUNTIES = [
+  "Baringo", "Bomet", "Bungoma", "Busia", "Elgeyo-Marakwet", "Embu", "Garissa", 
+  "Homa Bay", "Isiolo", "Kajiado", "Kakamega", "Kericho", "Kiambu", "Kilifi", 
+  "Kirinyaga", "Kisii", "Kisumu", "Kitui", "Kwale", "Laikipia", "Lamu", 
+  "Machakos", "Makueni", "Mandera", "Marsabit", "Meru", "Migori", "Mombasa", 
+  "Murang'a", "Nairobi", "Nakuru", "Nandi", "Narok", "Nyamira", "Nyandarua", 
+  "Nyeri", "Samburu", "Siaya", "Taita-Taveta", "Tana River", "Tharaka-Nithi", 
+  "Trans Nzoia", "Turkana", "Uasin Gishu", "Vihiga", "Wajir", "West Pokot"
+];
+
 export default function SellItemPage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -20,7 +30,7 @@ export default function SellItemPage() {
   const [town, setTown] = useState("");
   const [sellerPhone, setSellerPhone] = useState(""); 
   
-  // 🌟 NEW: Array to hold multiple images
+  //Array to hold multiple images
   const [imageFiles, setImageFiles] = useState<File[]>([]);
 
   useEffect(() => {
@@ -35,7 +45,7 @@ export default function SellItemPage() {
     checkUser();
   }, [router]);
 
-  // 🌟 NEW: Handle Multiple Images
+  //Handle Multiple Images
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const selectedFiles = Array.from(e.target.files);
@@ -44,7 +54,7 @@ export default function SellItemPage() {
     }
   };
 
-  // 🌟 NEW: Remove a specific image from the preview
+  //Remove a specific image from the preview
   const removeImage = (indexToRemove: number) => {
     setImageFiles((prev) => prev.filter((_, index) => index !== indexToRemove));
   };
@@ -66,7 +76,7 @@ export default function SellItemPage() {
     setIsSubmitting(true);
 
     try {
-      // 🌟 NEW: Upload Multiple Images in Parallel
+      //Upload Multiple Images in Parallel
       const uploadPromises = imageFiles.map(async (file) => {
         const fileExt = file.name.split('.').pop();
         const fileName = `${Math.random()}.${fileExt}`;
@@ -122,13 +132,13 @@ export default function SellItemPage() {
     }
   };
 
-  if (!user) return <div className="p-8 text-center text-gray-500">Checking authentication...</div>;
+  if (!user) return <div className="p-8 text-center text-gray-400">Checking authentication...</div>;
 
   return (
     <div className="max-w-2xl mx-auto py-8 px-4">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Post an Item</h1>
-        <p className="text-gray-500 mt-2">Fill in the details below. There is a Ksh 100 listing fee per item.</p>
+        <h1 className="text-3xl font-bold text-white">Post an Item</h1>
+        <p className="text-gray-200 mt-2">Fill in the details below. There is a Ksh 100 listing fee per item.</p>
       </div>
 
       <form onSubmit={handleSubmit} className="bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-gray-100 space-y-6">
@@ -171,15 +181,22 @@ export default function SellItemPage() {
 
         {/* Location Row */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
+         <div>
             <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
               <MapPin className="h-4 w-4 text-green-500" /> County
             </label>
-            <select required value={county} onChange={(e) => setCounty(e.target.value)} className="w-full px-4 py-3 border text-black  border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none bg-white">
-              <option value="">Select County...</option>
-              <option value="Nairobi">Nairobi</option>
-              <option value="Kiambu">Kiambu</option>
-              <option value="Mombasa">Mombasa</option>
+            <select 
+              required 
+              value={county} 
+              onChange={(e) => setCounty(e.target.value)} 
+              className="w-full px-4 py-3 border text-black border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none bg-white"
+            >
+              <option value="" disabled>Select County...</option>
+              {KENYAN_COUNTIES.map((countyName) => (
+                <option key={countyName} value={countyName}>
+                  {countyName}
+                </option>
+              ))}
             </select>
           </div>
           <div>

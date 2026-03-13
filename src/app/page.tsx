@@ -178,7 +178,7 @@ export default function Home() {
       {/* Results Header */}
       {!loading && displayItems.length > 0 && (
         <div className="flex justify-between items-end px-1">
-          <h2 className="text-lg font-bold text-gray-900">
+          <h2 className="text-lg font-bold text-white">
             {userLocation ? `Found near "${userLocation}"` : "Fresh Listings"}
           </h2>
           <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">{displayItems.length} items</span>
