@@ -47,20 +47,34 @@ export async function GET(req: Request) {
 
     // 4. If paid successfully, update Supabase!
     if (statusData.payment_status_description === "COMPLETED") {
-      // Update item status to active
+      
       const { error: updateError } = await supabaseAdmin
         .from('items')
         .update({ status: 'active' })
         .eq('id', itemId);
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error("Failed to update item status:", updateError);
+      }
       
-      // Optional: Save the payment record in the payments table we created in Step 2
-      await supabaseAdmin.from('payments').insert([{
-        item_id: itemId,
-        pesapal_tracking_id: trackingId,
-        payment_status: "COMPLETED"
-      }]);
+      try {
+        const { data: existingPayment } = await supabaseAdmin
+          .from('payments')
+          .select('id')
+          .eq('pesapal_tracking_id', trackingId)
+          .single();
+
+        if (!existingPayment) {
+          await supabaseAdmin.from('payments').insert([{
+            item_id: itemId,
+            pesapal_tracking_id: trackingId,
+            payment_status: "COMPLETED"
+          }]);
+        }
+      } catch (insertError) {
+
+        console.error("Non-fatal error saving to payments table:", insertError);
+      }
 
       return NextResponse.json({ paymentStatus: "COMPLETED" });
     }

@@ -14,11 +14,9 @@ function CallbackContent() {
   const merchantRef = searchParams.get("OrderMerchantReference");
 
   useEffect(() => {
-    // 2. We move everything inside the async function to satisfy React's strict rules
-    const verifyPayment = async () => {
-      // If missing params, set failed asynchronously to avoid cascading renders
+    const verifyPayment = async (attempts = 0) => {
       if (!trackingId || !merchantRef) {
-        await Promise.resolve(); // This tiny trick stops the synchronous setState warning!
+        await Promise.resolve();
         setStatus("failed");
         return;
       }
@@ -30,7 +28,14 @@ function CallbackContent() {
         if (data.paymentStatus === "COMPLETED") {
           setStatus("success");
           setTimeout(() => router.push("/"), 3000);
-        } else {
+        } 
+        else if ((data.paymentStatus === "PENDING" || data.paymentStatus === "INVALID") && attempts < 10) {
+          // If it's still processing, wait 3 seconds and try again (up to 10 times)
+          console.log(`Payment still pending. Retrying... (Attempt ${attempts + 1})`);
+          setTimeout(() => verifyPayment(attempts + 1), 3000);
+        } 
+        else {
+          // If we tried 10 times or it specifically failed, then we give up
           setStatus("failed");
         }
       } catch (error) {
