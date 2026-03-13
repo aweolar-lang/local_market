@@ -1,8 +1,9 @@
 import { supabase } from "@/lib/supabase";
 import Image from "next/image";
 import Link from "next/link";
-import { notFound } from "next/navigation";
 import { MapPin, Phone, ArrowLeft, ShieldCheck, Tag } from "lucide-react";
+export const dynamic = 'force-dynamic';
+
 
 // Strictly typing our expected data!
 interface Item {
@@ -22,19 +23,33 @@ export default async function ItemDetailsPage({ params }: { params: { id: string
   // Extract the ID from the URL (e.g., /item/12345)
   const { id } = params;
 
-  // Fetch the specific item from Supabase
+// Fetch the specific item from Supabase
   const { data, error } = await supabase
     .from('items')
     .select('*')
     .eq('id', id)
     .single();
 
-  // If the item doesn't exist (or the ID is wrong), show the built-in Next.js 404 page
-  if (error || !data) {
-    notFound();
+  if (error) {
+    return (
+      <div className="p-10 max-w-2xl mx-auto mt-10 bg-red-50 border border-red-200 text-red-800 rounded-xl">
+        <h2 className="font-bold text-lg mb-2"> Error!</h2>
+        <pre className="whitespace-pre-wrap">{JSON.stringify(error, null, 2)}</pre>
+      </div>
+    );
+  }
+
+  if (!data) {
+    return (
+      <div className="p-10 max-w-2xl mx-auto mt-10 bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-xl">
+        <h2 className="font-bold text-lg mb-2">No Item Found!</h2>
+        <p>The database searched for ID: <b>{id}</b> but it does not exist.</p>
+      </div>
+    );
   }
 
   const item = data as Item;
+
 
   // Generate the WhatsApp link
   const waMessage = encodeURIComponent(`Hi, I saw your "${item.title}" on LocalSoko for Ksh ${item.price}. Is it still available?`);
