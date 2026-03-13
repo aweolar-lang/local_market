@@ -100,14 +100,14 @@ export default async function ItemDetailsPage({ params }: { params: Promise<{ id
 
   const item = data as Item;
 
-  // 🌟 Format the date safely
+  
   const postedDate = new Date(item.created_at).toLocaleDateString('en-KE', {
     month: 'short',
     day: 'numeric',
     year: 'numeric'
   });
 
-  // 🌟 Smart Phone Formatting (Prevents broken links!)
+  
   let formattedPhone = item.seller_phone.trim();
   if (formattedPhone.startsWith('0')) {
     formattedPhone = '254' + formattedPhone.substring(1);
@@ -182,7 +182,7 @@ export default async function ItemDetailsPage({ params }: { params: Promise<{ id
               </p>
             </div>
 
-            {/* Official WhatsApp Button */}
+           
             <a 
               href={waLink}
               target="_blank"

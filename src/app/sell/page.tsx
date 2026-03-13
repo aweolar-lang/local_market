@@ -4,20 +4,24 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { User } from '@supabase/supabase-js';
-import { Camera, DollarSign, MapPin, Tag, AlignLeft, Image as ImageIcon, Phone } from "lucide-react"; // <-- Added Phone icon
+import { Camera, DollarSign, MapPin, Tag, AlignLeft, Image as ImageIcon, Phone, X } from "lucide-react"; 
+import Image from "next/image";
 
 export default function SellItemPage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [user, setUser] = useState<User | null>(null);
+  
   // Form State
   const [title, setTitle] = useState("");
   const [price, setPrice] = useState("");
   const [description, setDescription] = useState("");
   const [county, setCounty] = useState("");
   const [town, setTown] = useState("");
-  const [sellerPhone, setSellerPhone] = useState(""); // <-- New State for Phone Number
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [sellerPhone, setSellerPhone] = useState(""); 
+  
+  // 🌟 NEW: Array to hold multiple images
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
 
   useEffect(() => {
     const checkUser = async () => {
@@ -31,10 +35,18 @@ export default function SellItemPage() {
     checkUser();
   }, [router]);
 
+  // 🌟 NEW: Handle Multiple Images
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setImageFile(e.target.files[0]);
+    if (e.target.files) {
+      const selectedFiles = Array.from(e.target.files);
+      // Optional: Limit to a maximum of 5 images so they don't upload too many
+      setImageFiles((prev) => [...prev, ...selectedFiles].slice(0, 5));
     }
+  };
+
+  // 🌟 NEW: Remove a specific image from the preview
+  const removeImage = (indexToRemove: number) => {
+    setImageFiles((prev) => prev.filter((_, index) => index !== indexToRemove));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -46,31 +58,38 @@ export default function SellItemPage() {
       return;
     }
     
-    if (!imageFile || !user) {
-      alert("Please upload an image and ensure you are logged in.");
+    if (imageFiles.length === 0 || !user) {
+      alert("Please upload at least one image.");
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      // A. Upload Image
-      const fileExt = imageFile.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
-      const filePath = `${user.id}/${fileName}`;
+      // 🌟 NEW: Upload Multiple Images in Parallel
+      const uploadPromises = imageFiles.map(async (file) => {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Math.random()}.${fileExt}`;
+        const filePath = `${user.id}/${fileName}`;
 
-      const { error: uploadError } = await supabase.storage
-        .from('item-images')
-        .upload(filePath, imageFile);
+        const { error: uploadError } = await supabase.storage
+          .from('item-images')
+          .upload(filePath, file);
 
-      if (uploadError) throw uploadError;
+        if (uploadError) throw uploadError;
 
-      // B. Get Image URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('item-images')
-        .getPublicUrl(filePath);
+        // Get the public URL for this specific image
+        const { data: { publicUrl } } = supabase.storage
+          .from('item-images')
+          .getPublicUrl(filePath);
 
-      // C. Save to Database (Now including the phone number!)
+        return publicUrl;
+      });
+
+      // Wait for all images to finish uploading and get their URLs
+      const uploadedUrls = await Promise.all(uploadPromises);
+
+      // C. Save to Database
       const { data: newItem, error: dbError } = await supabase
         .from('items')
         .insert([
@@ -81,8 +100,8 @@ export default function SellItemPage() {
             description,
             county,
             town,
-            seller_phone: sellerPhone, // <-- Saving the phone number here!
-            images: [publicUrl],
+            seller_phone: sellerPhone, 
+            images: uploadedUrls, // <-- Saving ALL URLs to the array!
             status: 'pending_payment'
           }
         ])
@@ -175,7 +194,7 @@ export default function SellItemPage() {
           </div>
         </div>
 
-        {/* WhatsApp Number Input (NEW!) */}
+        {/* WhatsApp Number Input */}
         <div>
           <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
             <Phone className="h-4 w-4 text-green-500" /> WhatsApp Number
@@ -190,30 +209,62 @@ export default function SellItemPage() {
 
         {/* Image Upload Area */}
         <div>
-          <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-            <Camera className="h-4 w-4 text-green-500" /> Upload Primary Photo
+          <label className="flex flex-col gap-1 text-sm font-medium text-gray-700 mb-2">
+            <span className="flex items-center gap-2">
+              <Camera className="h-4 w-4 text-green-500" /> Upload Photos (Max 5)
+            </span>
+            <span className="text-xs text-gray-500 font-normal">First picture will be the main cover photo.</span>
           </label>
-          <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-xl hover:bg-gray-50 transition-colors cursor-pointer relative">
+          
+          <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-xl hover:bg-gray-50 transition-colors cursor-pointer relative bg-gray-50/50">
             <input 
-              type="file" accept="image/png, image/jpeg, image/jpg" onChange={handleImageChange} required
-              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              type="file" 
+              multiple // <-- Allows selecting multiple!
+              accept="image/png, image/jpeg, image/jpg" 
+              onChange={handleImageChange} 
+              required={imageFiles.length === 0} // Only require if array is empty
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
             />
-            <div className="space-y-1 text-center">
-              {imageFile ? (
-                <div className="flex flex-col items-center">
-                  <ImageIcon className="mx-auto h-12 w-12 text-green-500" />
-                  <p className="text-sm text-green-600 font-medium mt-2">{imageFile.name}</p>
-                </div>
-              ) : (
-                <>
-                  <Camera className="mx-auto h-12 w-12 text-gray-400" />
-                  <div className="flex text-sm text-gray-600 justify-center">
-                    <span className="font-medium text-green-600">Click to upload</span>
-                  </div>
-                </>
-              )}
+            <div className="space-y-2 text-center">
+              <ImageIcon className="mx-auto h-10 w-10 text-gray-400" />
+              <div className="flex text-sm text-gray-600 justify-center">
+                <span className="font-semibold text-green-600">Click or Drag to add photos</span>
+              </div>
             </div>
           </div>
+
+          {/* Image Previews Row */}
+          {imageFiles.length > 0 && (
+            <div className="flex gap-3 mt-4 overflow-x-auto pb-2">
+              {imageFiles.map((file, index) => (
+                <div key={index} className="relative h-24 w-24 shrink-0 rounded-xl overflow-hidden border border-gray-200 group">
+                  {/* Generate local preview URL for visibility */}
+                  <Image
+                    src={URL.createObjectURL(file)}
+                    alt={`Preview ${index}`}
+                    className="h-full w-full object-cover"
+                    width={96}
+                    height={96}
+                    style={{ objectFit: "cover" }}
+                  />
+                  {/* Remove Button */}
+                  <button 
+                    type="button" 
+                    onClick={() => removeImage(index)} 
+                    className="absolute top-1.5 right-1.5 bg-red-500 hover:bg-red-600 text-white p-1 rounded-full shadow-sm transition-colors"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                  {/* Label for Cover Photo */}
+                  {index === 0 && (
+                    <div className="absolute bottom-0 inset-x-0 bg-green-500 text-white text-[10px] font-bold text-center py-0.5">
+                      COVER
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Submit Button */}
@@ -221,7 +272,7 @@ export default function SellItemPage() {
           type="submit" disabled={isSubmitting}
           className="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:ring-2 focus:ring-green-500 disabled:opacity-70 transition-all"
         >
-          {isSubmitting ? "Uploading & Saving..." : "Continue to Payment (Ksh 100)"}
+          {isSubmitting ? "Uploading Photos & Saving..." : "Continue to Payment (Ksh 100)"}
         </button>
 
       </form>
