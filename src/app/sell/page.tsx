@@ -39,6 +39,13 @@ export default function SellItemPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!user) {
+      alert("You must be logged in to post an item.");
+      setIsSubmitting(false);
+      return;
+    }
+    
     if (!imageFile || !user) {
       alert("Please upload an image and ensure you are logged in.");
       return;
