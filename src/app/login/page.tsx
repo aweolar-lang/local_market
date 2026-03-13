@@ -66,7 +66,7 @@ export default function LoginPage() {
           </div>
         )}
 
-        <form className="space-y-5">
+        <form className="space-y-5 text-black">
           {/* Email Input */}
           <div>
             <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
