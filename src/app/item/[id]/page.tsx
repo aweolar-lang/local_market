@@ -2,8 +2,8 @@ import { supabase } from "@/lib/supabase";
 import Image from "next/image";
 import Link from "next/link";
 import { MapPin, Phone, ArrowLeft, ShieldCheck, Tag } from "lucide-react";
-export const dynamic = 'force-dynamic';
 
+export const dynamic = 'force-dynamic';
 
 // Strictly typing our expected data!
 interface Item {
@@ -19,11 +19,12 @@ interface Item {
   created_at: string;
 }
 
-export default async function ItemDetailsPage({ params }: { params: { id: string } }) {
-  // Extract the ID from the URL (e.g., /item/12345)
-  const { id } = params;
+export default async function ItemDetailsPage({ params }: { params: Promise<{ id: string }> }) {
+  
+  const resolvedParams = await params;
+  const id = resolvedParams.id;
 
-// Fetch the specific item from Supabase
+  // Fetch the specific item from Supabase
   const { data, error } = await supabase
     .from('items')
     .select('*')
