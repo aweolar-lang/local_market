@@ -45,8 +45,14 @@ export async function GET(req: Request) {
     });
     const statusData = await statusRes.json();
 
+    console.log("PESAPAL RAW STATUS DATA:", statusData);
+
+    // Make everything uppercase so "Completed", "COMPLETED", and "completed" all match safely
+    const statusDescription = (statusData.payment_status_description || "").toUpperCase();
+    const statusCode = (statusData.payment_status_code || "").toUpperCase();
+
     // 4. If paid successfully, update Supabase!
-    if (statusData.payment_status_description === "COMPLETED") {
+    if (statusDescription === "COMPLETED" || statusCode === "COMPLETED") {
       
       const { error: updateError } = await supabaseAdmin
         .from('items')
@@ -72,21 +78,18 @@ export async function GET(req: Request) {
           }]);
         }
       } catch (insertError) {
-
         console.error("Non-fatal error saving to payments table:", insertError);
       }
 
       return NextResponse.json({ paymentStatus: "COMPLETED" });
     }
 
-    return NextResponse.json({ paymentStatus: statusData.payment_status_description });
+    // Return the actual uppercase status so your frontend polling logic knows if it's "PENDING"
+    return NextResponse.json({ paymentStatus: statusCode || statusDescription });
 
   } catch (error) {
     console.error("API Error:", error);
-    
-    // Safely check if the error is a standard JavaScript Error object
     const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
-    
     return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
