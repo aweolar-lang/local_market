@@ -2,8 +2,9 @@ import Image from "next/image";
 import Link from "next/link"; // <-- We need this to navigate!
 import { MapPin, Search, PackageOpen } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+export const dynamic = 'force-dynamic';
 
-// 1. Strictly typing our expected data to banish 'any'
+// 1. Strictly typing expected data to banish 'any'
 interface Item {
   id: string;
   title: string;
