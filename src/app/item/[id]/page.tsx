@@ -3,6 +3,7 @@ import { Metadata } from 'next';
 import Link from "next/link";
 import { MapPin, ArrowLeft, ShieldCheck, Tag, MessageCircle, Calendar } from "lucide-react";
 import ImageGallery from "@/components/ImageGallery";
+import ReviewSeller from "@/components/ReviewSeller";
 
 export const dynamic = 'force-dynamic';
 
@@ -15,6 +16,7 @@ interface Item {
   county: string;
   town: string;
   seller_phone: string;
+  seller_id: string;
   images: string[];
   status: string;
   created_at: string;
@@ -193,6 +195,7 @@ export default async function ItemDetailsPage({ params }: { params: Promise<{ id
               Message Seller on WhatsApp
             </a>
           </div>
+          <ReviewSeller sellerId={item.seller_id} />
 
         </div>
       </div>

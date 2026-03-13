@@ -3,9 +3,11 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { MapPin, Search, PackageOpen, Navigation, Loader2, MessageCircle } from "lucide-react";
+import { MapPin, Search, PackageOpen, Navigation, Loader2, MessageCircle, Phone } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import SkeletonCard from "@/components/SkeletonCard";
+import SellerRating from "@/components/SellerRating";
+
 
 // Strictly typing expected data
 interface Item {
@@ -15,6 +17,7 @@ interface Item {
   county: string;
   town: string;
   seller_phone: string;
+  seller_id: string;
   images: string[];
   status: string;
   created_at: string;
@@ -227,9 +230,20 @@ export default function Home() {
                   Ksh {item.price.toLocaleString()}
                 </p>
 
-                <div className="flex items-center gap-1 text-xs text-gray-500 mb-4 mt-auto">
-                  <MapPin className="h-3.5 w-3.5 shrink-0 text-gray-400" />
-                  <span className="truncate">{item.town}, {item.county}</span>
+                <div className="mb-3">
+                  <SellerRating sellerId={item.seller_id} />
+                </div>
+
+                {/* LOCATION & PHONE NUMBER DISPLAY */}
+                <div className="flex flex-col gap-1.5 mb-4 mt-auto">
+                  <div className="flex items-center gap-1.5 text-xs text-gray-500">
+                    <MapPin className="h-3.5 w-3.5 shrink-0 text-gray-400" />
+                    <span className="truncate">{item.town}, {item.county}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-xs text-gray-500">
+                    <Phone className="h-3.5 w-3.5 shrink-0 text-gray-400" />
+                    <span className="font-medium text-gray-800">{item.seller_phone}</span>
+                  </div>
                 </div>
 
              
