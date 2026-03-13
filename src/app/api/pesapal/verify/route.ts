@@ -13,12 +13,12 @@ export async function GET(req: Request) {
     const trackingId = searchParams.get('trackingId');
     const merchantRef = searchParams.get('merchantRef'); // e.g., "item-uuid-1234567890"
 
-    if (!trackingId || !merchantRef) {
+  if (!trackingId || !merchantRef) {
       return NextResponse.json({ error: "Missing parameters" }, { status: 400 });
     }
 
-    // Extract the actual item ID from the merchant reference
-    const itemId = merchantRef.split('-')[0];
+    
+    const itemId = merchantRef.substring(0, 36);
 
     // 1. Get Pesapal Credentials
     const consumerKey = process.env.PESAPAL_CONSUMER_KEY;

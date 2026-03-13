@@ -39,7 +39,7 @@ export async function POST(req: Request) {
     const orderData = {
       id: `${itemId}-${Date.now()}`, // Unique merchant reference
       currency: "KES",
-      amount: 100.00,
+      amount: 2.00,
       description: `Listing fee for: ${title}`,
       callback_url: `${process.env.NEXT_PUBLIC_SITE_URL}/pay/callback`, 
       notification_id: process.env.PESAPAL_IPN_ID, 
