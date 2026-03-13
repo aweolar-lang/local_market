@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { MapPin, Search, PackageOpen, Navigation, Loader2 } from "lucide-react";
+import { MapPin, Search, PackageOpen, Navigation, Loader2, MessageCircle } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import SkeletonCard from "@/components/SkeletonCard";
 
@@ -48,29 +48,33 @@ export default function Home() {
     fetchItems();
   }, []);
 
-  // HTML5 Geolocation to find the user's actual city
+  // HTML5 Geolocation (Warning: Often defaults to Nairobi on Desktop WiFi)
   const handleGetLocation = () => {
     setIsLocating(true);
     if ("geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition(async (position) => {
-        const { latitude, longitude } = position.coords;
-        try {
-          // Free reverse geocoding to get the city/town name from coordinates
-          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
-          const data = await res.json();
-          
-          const city = data.address.city || data.address.town || data.address.county || "";
-          setUserLocation(city);
-        } catch (error) {
-          console.error("Failed to fetch location name", error);
-          alert("Could not determine your exact town. Please type it manually.");
-        } finally {
+      // Use high accuracy to try and force real GPS instead of IP address
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords;
+          try {
+            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+            const data = await res.json();
+            
+            const city = data.address.city || data.address.town || data.address.county || "";
+            setUserLocation(city);
+          } catch (error) {
+            console.error("Failed to fetch location name", error);
+            alert("Could not determine your exact town. Please type it manually.");
+          } finally {
+            setIsLocating(false);
+          }
+        }, 
+        () => {
+          alert("Location access denied or failed. Please type your location (e.g., Embu) manually.");
           setIsLocating(false);
-        }
-      }, () => {
-        alert("Location access denied. Please type your location manually.");
-        setIsLocating(false);
-      });
+        },
+        { enableHighAccuracy: true, timeout: 10000 } // Force high accuracy
+      );
     } else {
       alert("Geolocation is not supported by your browser");
       setIsLocating(false);
@@ -78,8 +82,6 @@ export default function Home() {
   };
 
   // Smart Filtering & Sorting
-  // 1. Filter by search query
-  // 2. Sort so items matching the user's location appear FIRST
   const displayItems = items
     .filter(item => {
       const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -87,45 +89,43 @@ export default function Home() {
       return matchesSearch;
     })
     .sort((a, b) => {
-      if (!userLocation) return 0; // No location set, keep default order
+      if (!userLocation) return 0; 
       
       const loc = userLocation.toLowerCase();
       const aIsLocal = a.town.toLowerCase().includes(loc) || a.county.toLowerCase().includes(loc);
       const bIsLocal = b.town.toLowerCase().includes(loc) || b.county.toLowerCase().includes(loc);
       
-      if (aIsLocal && !bIsLocal) return -1; // A goes first
-      if (!aIsLocal && bIsLocal) return 1;  // B goes first
-      return 0; // Keep same
+      if (aIsLocal && !bIsLocal) return -1; 
+      if (!aIsLocal && bIsLocal) return 1;  
+      return 0; 
     });
 
   return (
-    <div className="space-y-10 pb-10">
+    <div className="space-y-8 pb-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       
-      {/* NEW HERO SECTION */}
-      <section className="bg-green-600 text-white rounded-3xl p-8 md:p-12 shadow-lg text-center md:text-left flex flex-col md:flex-row items-center justify-between gap-8 mt-4">
-        <div className="max-w-xl space-y-4">
-          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight">
-            Find exactly what you need, <span className="text-green-200">right in your neighborhood.</span>
+      <section className="bg-linear-to-r from-green-600 to-green-800 text-white rounded-2xl p-6 md:p-8 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4 mt-6">
+        <div className="max-w-2xl space-y-2">
+          <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">
+            Buy & Sell Locally. <span className="text-green-200">Zero Hassle.</span>
           </h1>
-          <p className="text-green-100 text-lg">
-            Buy and sell electronics, furniture, and more with people near you. Safely and securely.
+          <p className="text-green-50 text-sm md:text-base">
+            Find electronics, furniture, cars, and more from verified sellers in your neighborhood.
           </p>
         </div>
       </section>
 
-      {/* 🔍 SEARCH & LOCATION FILTER BAR */}
-      <section className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col md:flex-row gap-4 sticky top-4 z-10">
+      <section className="bg-white p-3 rounded-xl shadow-sm border border-gray-200 flex flex-col md:flex-row gap-3 sticky top-4 z-20">
         
         {/* Search Input */}
         <div className="relative flex-1">
           <input 
             type="text" 
-            placeholder="Search for cars, phones, sofas..." 
+            placeholder="Search items..." 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 bg-gray-50 border-none rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 transition-all text-gray-900"
+            className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all text-gray-900 text-sm"
           />
-          <Search className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
+          <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
         </div>
 
         {/* Location Input & GPS Button */}
@@ -133,29 +133,29 @@ export default function Home() {
           <div className="relative flex-1">
             <input 
               type="text" 
-              placeholder="Enter your town or county..." 
+              placeholder="Your town (e.g. Embu)" 
               value={userLocation}
               onChange={(e) => setUserLocation(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-gray-50 border-none rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 transition-all text-gray-900"
+              className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all text-gray-900 text-sm"
             />
-            <MapPin className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
+            <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
           </div>
           
           <button 
             onClick={handleGetLocation}
             disabled={isLocating}
-            className="bg-gray-900 hover:bg-black text-white px-4 py-3 rounded-xl flex items-center gap-2 transition-all font-medium whitespace-nowrap"
+            className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2.5 rounded-lg flex items-center gap-2 transition-all text-sm font-semibold whitespace-nowrap border border-gray-200"
+            title="Auto-detect location (Works best on mobile)"
           >
-            {isLocating ? <Loader2 className="h-5 w-5 animate-spin" /> : <Navigation className="h-5 w-5" />}
-            <span className="hidden sm:inline">Near Me</span>
+            {isLocating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Navigation className="h-4 w-4" />}
+            <span className="hidden sm:inline">Locate</span>
           </button>
         </div>
       </section>
 
-     {/* SKELETON LOADING STATE */}
+      {/* SKELETON LOADING STATE */}
       {loading && (
-        <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {/* An array of 8 empty slots to show 8 skeletons */}
+        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {[...Array(8)].map((_, index) => (
             <SkeletonCard key={index} />
           ))}
@@ -164,12 +164,12 @@ export default function Home() {
 
       {/* Empty State */}
       {!loading && displayItems.length === 0 && (
-        <div className="text-center py-20 bg-white rounded-3xl border border-gray-100 shadow-sm">
-          <PackageOpen className="mx-auto h-16 w-16 text-gray-300 mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900">No items found</h2>
-          <p className="text-gray-500 mt-2 max-w-md mx-auto">
+        <div className="text-center py-16 bg-white rounded-2xl border border-gray-100 shadow-sm">
+          <PackageOpen className="mx-auto h-12 w-12 text-gray-300 mb-3" />
+          <h2 className="text-xl font-bold text-gray-900">No items found</h2>
+          <p className="text-gray-500 mt-1 text-sm max-w-sm mx-auto">
             {searchQuery || userLocation 
-              ? "We couldn't find anything matching your search in this area. Try adjusting your filters." 
+              ? "We couldn't find anything matching your search. Try typing a different town." 
               : "Be the first to list an item in your area!"}
           </p>
         </div>
@@ -177,30 +177,37 @@ export default function Home() {
 
       {/* Results Header */}
       {!loading && displayItems.length > 0 && (
-        <div className="flex justify-between items-end px-2">
-          <h2 className="text-xl font-bold text-gray-900">
-            {userLocation ? `Items near "${userLocation}"` : "Latest Additions"}
+        <div className="flex justify-between items-end px-1">
+          <h2 className="text-lg font-bold text-gray-900">
+            {userLocation ? `Found near "${userLocation}"` : "Fresh Listings"}
           </h2>
-          <span className="text-sm text-gray-500">{displayItems.length} items</span>
+          <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">{displayItems.length} items</span>
         </div>
       )}
 
       {/* Real Item Grid */}
-      <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {displayItems.map((item) => {
+          
+          // Format the phone number to ensure it works globally with WhatsApp
+          // Removes leading zero and adds Kenya country code if necessary
+          let formattedPhone = item.seller_phone.trim();
+          if (formattedPhone.startsWith('0')) {
+            formattedPhone = '254' + formattedPhone.substring(1);
+          }
+          
           const waMessage = encodeURIComponent(`Hi, I saw your "${item.title}" on LocalSoko for Ksh ${item.price}. Is it still available?`);
-          const waLink = `https://wa.me/${item.seller_phone}?text=${waMessage}`;
+          const waLink = `https://wa.me/${formattedPhone}?text=${waMessage}`;
 
-          // Highlight items that match the user's location
           const isLocalMatch = userLocation && (item.town.toLowerCase().includes(userLocation.toLowerCase()) || item.county.toLowerCase().includes(userLocation.toLowerCase()));
 
           return (
-            <div key={item.id} className="group bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col">
+            <div key={item.id} className="group bg-white rounded-xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col">
               
-              <Link href={`/item/${item.id}`} className="relative h-56 w-full bg-gray-100 overflow-hidden block">
+              <Link href={`/item/${item.id}`} className="relative h-48 w-full bg-gray-100 overflow-hidden block">
                 {isLocalMatch && (
-                  <div className="absolute top-3 left-3 z-10 bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md">
-                    📍 Nearby
+                  <div className="absolute top-2 left-2 z-10 bg-green-500 text-white text-[10px] font-bold px-2 py-1 rounded-md shadow-sm uppercase tracking-wide">
+                    📍 Near You
                   </div>
                 )}
                 <Image 
@@ -211,27 +218,29 @@ export default function Home() {
                 />
               </Link>
 
-              <div className="p-5 flex flex-col grow">
-                <Link href={`/item/${item.id}`} className="hover:text-green-600 transition-colors mb-2">
-                  <h3 className="font-semibold text-gray-900 line-clamp-2 leading-tight">{item.title}</h3>
+              <div className="p-4 flex flex-col grow">
+                <Link href={`/item/${item.id}`} className="hover:text-green-600 transition-colors mb-1">
+                  <h3 className="font-semibold text-gray-900 line-clamp-2 leading-snug text-sm">{item.title}</h3>
                 </Link>
                 
-                <p className="text-xl font-black text-green-600 mb-4">
+                <p className="text-lg font-black text-gray-900 mb-3">
                   Ksh {item.price.toLocaleString()}
                 </p>
 
-                <div className="flex items-center gap-1.5 text-sm text-gray-500 mb-6 mt-auto bg-gray-50 p-2 rounded-lg">
-                  <MapPin className="h-4 w-4 shrink-0 text-gray-400" />
-                  <span className="truncate font-medium">{item.town}, {item.county}</span>
+                <div className="flex items-center gap-1 text-xs text-gray-500 mb-4 mt-auto">
+                  <MapPin className="h-3.5 w-3.5 shrink-0 text-gray-400" />
+                  <span className="truncate">{item.town}, {item.county}</span>
                 </div>
 
+             
                 <a 
                   href={waLink}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full text-center bg-green-50 hover:bg-green-100 text-green-700 border border-green-200 py-3 rounded-xl text-sm font-bold transition-colors"
+                  className="w-full flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#1DA851] text-white py-2.5 rounded-lg text-sm font-bold transition-colors shadow-sm"
                 >
-                  Message Seller
+                  <MessageCircle className="h-4 w-4" />
+                  WhatsApp
                 </a>
               </div>
             </div>
