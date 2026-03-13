@@ -1,7 +1,8 @@
 import { supabase } from "@/lib/supabase";
-import Image from "next/image";
+import { Metadata } from 'next';
 import Link from "next/link";
 import { MapPin, Phone, ArrowLeft, ShieldCheck, Tag } from "lucide-react";
+import ImageGallery from "@/components/ImageGallery";
 
 export const dynamic = 'force-dynamic';
 
@@ -17,6 +18,59 @@ interface Item {
   images: string[];
   status: string;
   created_at: string;
+}
+
+export async function generateMetadata({ 
+  params 
+}: { 
+  params: Promise<{ id: string }> 
+}): Promise<Metadata> {
+  
+ 
+  const resolvedParams = await params;
+  const id = resolvedParams.id;
+
+ 
+  const { data: item } = await supabase
+    .from('items')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+
+  if (!item) {
+    return {
+      title: 'Item Not Found | LocalSoko',
+      description: 'This item is no longer available on our platform.'
+    };
+  }
+
+
+  return {
+    title: `${item.title} - Ksh ${item.price.toLocaleString()}`,
+    description: item.description.substring(0, 160) + '...', 
+    openGraph: {
+      title: `${item.title} - Ksh ${item.price.toLocaleString()}`,
+      description: `Located in ${item.town}, ${item.county}. Click to view contact details!`,
+      url: `https://your-website-url.com/item/${item.id}`, 
+      siteName: 'LocalSoko',
+      images: [
+        {
+          url: item.images[0], 
+          width: 800,
+          height: 600,
+          alt: item.title,
+        },
+      ],
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image', 
+      title: `${item.title} - Ksh ${item.price.toLocaleString()}`,
+      description: `Check out this ${item.title} for sale in ${item.town}!`,
+      images: [item.images[0]],
+    },
+  };
 }
 
 export default async function ItemDetailsPage({ params }: { params: Promise<{ id: string }> }) {
@@ -66,13 +120,8 @@ export default async function ItemDetailsPage({ params }: { params: Promise<{ id
       <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden flex flex-col md:flex-row">
         
         {/* Left Side: Image Gallery (Just 1 image for now) */}
-        <div className="md:w-1/2 relative h-72 md:h-auto bg-gray-50 border-r border-gray-100">
-          <Image 
-            src={item.images[0]} 
-            alt={item.title} 
-            fill 
-            className="object-contain p-4"
-          />
+        <div className="w-full mb-8">
+             <ImageGallery images={item.images} />
         </div>
 
         {/* Right Side: Item Details */}
