@@ -122,7 +122,7 @@ export default function Home() {
   return (
     <div className="space-y-8 pb-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       
-      <section className="bg-linear-to-r from-green-600 to-green-800 text-white rounded-2xl p-6 md:p-8 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4 mt-6">
+      <section className="bg-linear-to-r from-green-600 to-green-800 text-white rounded-2xl p-6 md:p-8 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4 mt-1">
         <div className="max-w-2xl space-y-2">
           <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">
             Buy & Sell Locally. <span className="text-green-200">Zero Hassle.</span>
