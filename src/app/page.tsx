@@ -249,7 +249,7 @@ export default function Home() {
             <div key={item.id} className="group bg-white rounded-xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col">
               
               {/* 1. IMAGE AREA WITH BEAUTIFUL OVERLAYS */}
-              <Link href={`/item/${item.id}`} className="relative h-48 w-full bg-gray-100 overflow-hidden block">
+              <Link href={`/${item.id}`} className="relative h-48 w-full bg-gray-100 overflow-hidden block">
                 
                 {isLocalMatch && (
                   <div className="absolute top-2 left-2 z-10 bg-green-500 text-white text-[10px] font-bold px-2 py-1 rounded-md shadow-sm uppercase tracking-wide">
