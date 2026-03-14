@@ -134,7 +134,7 @@ export default function Home() {
       </section>
 
       {/* SEARCH AND LOCATION SECTION */}
-      <section className="bg-white p-3 rounded-xl shadow-sm border border-gray-200 flex flex-col md:flex-row gap-3 sticky top-4 z-20">
+      <section className="bg-white p-3 rounded-xl shadow-sm border border-gray-200 flex flex-col md:flex-row gap-3 sticky top-1 z-20">
         
         {/* Search Input */}
         <div className="relative flex-1">
