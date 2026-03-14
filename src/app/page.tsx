@@ -3,11 +3,21 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { MapPin, Search, PackageOpen, Navigation, Loader2, MessageCircle, Phone } from "lucide-react";
+
+import { MapPin, Search, PackageOpen, Navigation, Loader2, MessageCircle, Phone, Grid, Smartphone, Car, Sofa, Shirt, Briefcase } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import SkeletonCard from "@/components/SkeletonCard";
 import SellerRating from "@/components/SellerRating";
 
+
+const CATEGORIES = [
+  { name: "All", icon: Grid },
+  { name: "Electronics", icon: Smartphone },
+  { name: "Vehicles", icon: Car },
+  { name: "Furniture", icon: Sofa },
+  { name: "Fashion", icon: Shirt },
+  { name: "Services", icon: Briefcase },
+];
 
 // Strictly typing expected data
 interface Item {
@@ -22,6 +32,7 @@ interface Item {
   status: string;
   created_at: string;
   description?: string;
+  category?: string;
 }
 
 export default function Home() {
@@ -32,6 +43,7 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
   const [userLocation, setUserLocation] = useState<string>(""); 
   const [isLocating, setIsLocating] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState("All"); 
 
   // Fetch items on mount
   useEffect(() => {
@@ -51,11 +63,11 @@ export default function Home() {
     fetchItems();
   }, []);
 
-  // HTML5 Geolocation (Warning: Often defaults to Nairobi on Desktop WiFi)
+
   const handleGetLocation = () => {
     setIsLocating(true);
     if ("geolocation" in navigator) {
-      // Use high accuracy to try and force real GPS instead of IP address
+      
       navigator.geolocation.getCurrentPosition(
         async (position) => {
           const { latitude, longitude } = position.coords;
@@ -89,7 +101,11 @@ export default function Home() {
     .filter(item => {
       const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
                             item.description?.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchesSearch;
+      
+      
+      const matchesCategory = selectedCategory === "All" || item.category === selectedCategory;
+
+      return matchesSearch && matchesCategory;
     })
     .sort((a, b) => {
       if (!userLocation) return 0; 
@@ -117,6 +133,7 @@ export default function Home() {
         </div>
       </section>
 
+      {/* SEARCH AND LOCATION SECTION */}
       <section className="bg-white p-3 rounded-xl shadow-sm border border-gray-200 flex flex-col md:flex-row gap-3 sticky top-4 z-20">
         
         {/* Search Input */}
@@ -156,6 +173,28 @@ export default function Home() {
         </div>
       </section>
 
+      <section className="flex gap-3 overflow-x-auto pb-2 -mt-4 scrollbar-hide">
+        {CATEGORIES.map((cat) => {
+          const Icon = cat.icon;
+          const isSelected = selectedCategory === cat.name;
+          
+          return (
+            <button
+              key={cat.name}
+              onClick={() => setSelectedCategory(cat.name)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-full whitespace-nowrap text-sm font-semibold transition-all border ${
+                isSelected
+                  ? "bg-green-600 text-white border-green-600 shadow-md transform scale-105"
+                  : "bg-white text-gray-700 border-gray-200 hover:border-green-500 hover:bg-green-50"
+              }`}
+            >
+              <Icon className="h-4 w-4" />
+              {cat.name}
+            </button>
+          );
+        })}
+      </section>
+
       {/* SKELETON LOADING STATE */}
       {loading && (
         <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -171,8 +210,8 @@ export default function Home() {
           <PackageOpen className="mx-auto h-12 w-12 text-gray-300 mb-3" />
           <h2 className="text-xl font-bold text-gray-900">No items found</h2>
           <p className="text-gray-500 mt-1 text-sm max-w-sm mx-auto">
-            {searchQuery || userLocation 
-              ? "We couldn't find anything matching your search. Try typing a different town." 
+            {searchQuery || userLocation || selectedCategory !== "All"
+              ? `We couldn't find anything matching your criteria. Try clearing your filters.` 
               : "Be the first to list an item in your area!"}
           </p>
         </div>
@@ -182,7 +221,11 @@ export default function Home() {
       {!loading && displayItems.length > 0 && (
         <div className="flex justify-between items-end px-1">
           <h2 className="text-lg font-bold text-white">
-            {userLocation ? `Found near "${userLocation}"` : "Fresh Listings"}
+            {userLocation 
+              ? `Found near "${userLocation}"` 
+              : selectedCategory !== "All" 
+                ? `${selectedCategory} Listings` 
+                : "Fresh Listings"}
           </h2>
           <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">{displayItems.length} items</span>
         </div>
@@ -192,8 +235,6 @@ export default function Home() {
       <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {displayItems.map((item) => {
           
-          // Format the phone number to ensure it works globally with WhatsApp
-          // Removes leading zero and adds Kenya country code if necessary
           let formattedPhone = item.seller_phone.trim();
           if (formattedPhone.startsWith('0')) {
             formattedPhone = '254' + formattedPhone.substring(1);
@@ -210,14 +251,12 @@ export default function Home() {
               {/* 1. IMAGE AREA WITH BEAUTIFUL OVERLAYS */}
               <Link href={`/item/${item.id}`} className="relative h-48 w-full bg-gray-100 overflow-hidden block">
                 
-                {/* Top Left: Near You Badge */}
                 {isLocalMatch && (
                   <div className="absolute top-2 left-2 z-10 bg-green-500 text-white text-[10px] font-bold px-2 py-1 rounded-md shadow-sm uppercase tracking-wide">
                     📍 Near You
                   </div>
                 )}
 
-                {/* Bottom Left: Seller Rating Overlay */}
                 <div className="absolute bottom-2 left-2 z-10 drop-shadow-md hover:scale-105 transition-transform">
                   <SellerRating sellerId={item.seller_id} />
                 </div>
@@ -245,7 +284,6 @@ export default function Home() {
                 <div className="flex items-center justify-between gap-2 mb-4 mt-auto border-t border-gray-50 pt-3">
                   <div className="flex items-center gap-1.5 text-xs text-gray-500 min-w-0">
                     <MapPin className="h-3.5 w-3.5 shrink-0 text-gray-400" />
-                    {/* We only show 'town' here to save horizontal space! */}
                     <span className="truncate">{item.town}</span>
                   </div>
                   
