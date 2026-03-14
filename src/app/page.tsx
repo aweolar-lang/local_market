@@ -204,15 +204,24 @@ export default function Home() {
 
           const isLocalMatch = userLocation && (item.town.toLowerCase().includes(userLocation.toLowerCase()) || item.county.toLowerCase().includes(userLocation.toLowerCase()));
 
-          return (
+         return (
             <div key={item.id} className="group bg-white rounded-xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col">
               
+              {/* 1. IMAGE AREA WITH BEAUTIFUL OVERLAYS */}
               <Link href={`/item/${item.id}`} className="relative h-48 w-full bg-gray-100 overflow-hidden block">
+                
+                {/* Top Left: Near You Badge */}
                 {isLocalMatch && (
                   <div className="absolute top-2 left-2 z-10 bg-green-500 text-white text-[10px] font-bold px-2 py-1 rounded-md shadow-sm uppercase tracking-wide">
                     📍 Near You
                   </div>
                 )}
+
+                {/* Bottom Left: Seller Rating Overlay */}
+                <div className="absolute bottom-2 left-2 z-10 drop-shadow-md hover:scale-105 transition-transform">
+                  <SellerRating sellerId={item.seller_id} />
+                </div>
+
                 <Image 
                   src={item.images[0]} 
                   alt={item.title}
@@ -221,7 +230,9 @@ export default function Home() {
                 />
               </Link>
 
+              {/* 2. COMPACT TEXT & ACTION AREA */}
               <div className="p-4 flex flex-col grow">
+                
                 <Link href={`/item/${item.id}`} className="hover:text-green-600 transition-colors mb-1">
                   <h3 className="font-semibold text-gray-900 line-clamp-2 leading-snug text-sm">{item.title}</h3>
                 </Link>
@@ -230,23 +241,21 @@ export default function Home() {
                   Ksh {item.price.toLocaleString()}
                 </p>
 
-                <div className="mb-3">
-                  <SellerRating sellerId={item.seller_id} />
-                </div>
-
-                {/* LOCATION & PHONE NUMBER DISPLAY */}
-                <div className="flex flex-col gap-1.5 mb-4 mt-auto">
-                  <div className="flex items-center gap-1.5 text-xs text-gray-500">
+                {/* HORIZONTAL ALIGNMENT: Location & Phone side-by-side */}
+                <div className="flex items-center justify-between gap-2 mb-4 mt-auto border-t border-gray-50 pt-3">
+                  <div className="flex items-center gap-1.5 text-xs text-gray-500 min-w-0">
                     <MapPin className="h-3.5 w-3.5 shrink-0 text-gray-400" />
-                    <span className="truncate">{item.town}, {item.county}</span>
+                    {/* We only show 'town' here to save horizontal space! */}
+                    <span className="truncate">{item.town}</span>
                   </div>
-                  <div className="flex items-center gap-1.5 text-xs text-gray-500">
+                  
+                  <div className="flex items-center gap-1.5 text-xs text-gray-500 shrink-0">
                     <Phone className="h-3.5 w-3.5 shrink-0 text-gray-400" />
                     <span className="font-medium text-gray-800">{item.seller_phone}</span>
                   </div>
                 </div>
 
-             
+                {/* Official WhatsApp Button */}
                 <a 
                   href={waLink}
                   target="_blank"
