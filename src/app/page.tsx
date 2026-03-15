@@ -120,60 +120,103 @@ export default function Home() {
     });
 
   return (
-    <div className="space-y-6 pb-3 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      
-      <section className="bg-linear-to-r from-green-600 to-green-800 text-white rounded-2xl p-6 md:p-8 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4 mt-1">
-        <div className="max-w-2xl space-y-2">
-          <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">
-            Buy & Sell Locally. <span className="text-green-200">Zero Hassle.</span>
+    <div className="space-y-6 pb-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* HERO */}
+      <section className="bg-linear-to-r from-[#047857] to-[#064E3B] text-white rounded-2xl p-6 md:p-8 shadow-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mt-4">
+        <div className="max-w-2xl space-y-3">
+          <h1 className="text-2xl md:text-4xl font-extrabold tracking-tight leading-tight">
+            Buy & Sell Locally — <span className="text-green-200">Zero Hassle</span>
           </h1>
-          <p className="text-green-50 text-sm md:text-base">
-            Find electronics, furniture, cars, and more from verified sellers in your neighborhood.
+          <p className="text-green-50 text-sm md:text-base opacity-95">
+            Discover items from verified sellers near you. Fast chat, transparent prices, and safe local deals.
           </p>
+          <div className="flex gap-3 mt-3">
+            <Link href="/sell" className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 text-white py-2 px-3 rounded-lg text-sm font-semibold">
+              List an item
+            </Link>
+            <Link href="/how-it-works" className="inline-flex items-center gap-2 bg-white/6 hover:bg-white/12 text-white py-2 px-3 rounded-lg text-sm">
+              How it works
+            </Link>
+          </div>
+        </div>
+
+        <div className="hidden md:block">{/* small decorative area for balance - keep empty to avoid logic changes */}
         </div>
       </section>
 
-      {/* SEARCH AND LOCATION SECTION */}
-      <section className="bg-white p-3 rounded-xl shadow-sm border border-gray-200 flex flex-col md:flex-row gap-3 sticky top-1 z-20">
-        
-        {/* Search Input */}
-        <div className="relative flex-1">
-          <input 
-            type="text" 
-            placeholder="Search items..." 
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all text-gray-900 text-sm"
-          />
-          <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-        </div>
-
-        {/* Location Input & GPS Button */}
-        <div className="relative flex-1 flex gap-2">
+      {/* SEARCH AND FILTERS */}
+      <section className="bg-white p-3 rounded-xl shadow-sm border border-gray-200 flex flex-col lg:flex-row gap-3 sticky top-4 z-20">
+        <form className="flex-1 flex items-center gap-3">
+          <label htmlFor="search" className="sr-only">Search items</label>
           <div className="relative flex-1">
+            <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
             <input 
+              id="search"
+              type="text" 
+              placeholder="Search items, e.g. 'phone', 'sofa'..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-white transition-all text-gray-900 text-sm"
+            />
+          </div>
+
+          <div className="w-64 hidden lg:block">
+            <label htmlFor="location" className="sr-only">Your town</label>
+            <div className="relative">
+              <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+              <input 
+                id="location"
+                type="text" 
+                placeholder="Your town (e.g. Embu)" 
+                value={userLocation}
+                onChange={(e) => setUserLocation(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-white transition-all text-gray-900 text-sm"
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button 
+              type="button"
+              onClick={handleGetLocation}
+              disabled={isLocating}
+              className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2.5 rounded-lg flex items-center gap-2 transition-all text-sm font-semibold border border-gray-200"
+              title="Auto-detect location (Works best on mobile)"
+            >
+              {isLocating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Navigation className="h-4 w-4" />}
+              <span className="hidden sm:inline">Locate</span>
+            </button>
+
+            <button 
+              type="button"
+              onClick={() => { setSearchQuery(''); setUserLocation(''); setSelectedCategory('All'); }}
+              className="bg-white border border-gray-200 px-3 py-2.5 rounded-lg text-sm text-gray-600 hover:bg-gray-50"
+              title="Clear filters"
+            >
+              Clear
+            </button>
+          </div>
+        </form>
+
+        {/* Mobile location field shown under search on small screens */}
+        <div className="lg:hidden">
+          <label htmlFor="locationMobile" className="sr-only">Your town</label>
+          <div className="relative mt-2">
+            <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+            <input 
+              id="locationMobile"
               type="text" 
               placeholder="Your town (e.g. Embu)" 
               value={userLocation}
               onChange={(e) => setUserLocation(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all text-gray-900 text-sm"
+              className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400 transition-all text-gray-900 text-sm"
             />
-            <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
           </div>
-          
-          <button 
-            onClick={handleGetLocation}
-            disabled={isLocating}
-            className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2.5 rounded-lg flex items-center gap-2 transition-all text-sm font-semibold whitespace-nowrap border border-gray-200"
-            title="Auto-detect location (Works best on mobile)"
-          >
-            {isLocating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Navigation className="h-4 w-4" />}
-            <span className="hidden sm:inline">Locate</span>
-          </button>
         </div>
       </section>
 
-      <section className="flex gap-3 overflow-x-auto pb-2 -mt-4 scrollbar-hide">
+      {/* CATEGORIES */}
+      <section className="flex gap-3 overflow-x-auto pb-2 -mt-2 scrollbar-hide px-1">
         {CATEGORIES.map((cat) => {
           const Icon = cat.icon;
           const isSelected = selectedCategory === cat.name;
@@ -182,29 +225,27 @@ export default function Home() {
             <button
               key={cat.name}
               onClick={() => setSelectedCategory(cat.name)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-full whitespace-nowrap text-sm font-semibold transition-all border ${
-                isSelected
-                  ? "bg-green-600 text-white border-green-600 shadow-md transform scale-105"
-                  : "bg-white text-gray-700 border-gray-200 hover:border-green-500 hover:bg-green-50"
-              }`}
+              className={`flex items-center gap-2 px-4 py-2 rounded-full whitespace-nowrap text-sm font-semibold transition-all border ${isSelected ? "bg-emerald-600 text-white border-emerald-600 shadow-md transform scale-105" : "bg-white text-gray-700 border-gray-200 hover:border-emerald-500 hover:bg-emerald-50"}`}
+              aria-pressed={isSelected}
             >
               <Icon className="h-4 w-4" />
-              {cat.name}
+              <span className="hidden sm:inline">{cat.name}</span>
+              <span className="sm:hidden">{cat.name[0]}</span>
             </button>
           );
         })}
       </section>
 
-      {/* SKELETON LOADING STATE */}
+      {/* LOADING */}
       {loading && (
-        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {[...Array(8)].map((_, index) => (
             <SkeletonCard key={index} />
           ))}
         </section>
       )}
 
-      {/* Empty State */}
+      {/* EMPTY */}
       {!loading && displayItems.length === 0 && (
         <div className="text-center py-16 bg-white rounded-2xl border border-gray-100 shadow-sm">
           <PackageOpen className="mx-auto h-12 w-12 text-gray-300 mb-3" />
@@ -217,22 +258,22 @@ export default function Home() {
         </div>
       )}
 
-      {/* Results Header */}
+      {/* RESULTS HEADER */}
       {!loading && displayItems.length > 0 && (
-        <div className="flex justify-between items-end px-1">
-          <h2 className="text-lg font-bold text-white">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end px-1">
+          <h2 className="text-lg font-bold text-gray-900">
             {userLocation 
               ? `Found near "${userLocation}"` 
               : selectedCategory !== "All" 
                 ? `${selectedCategory} Listings` 
                 : "Fresh Listings"}
           </h2>
-          <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">{displayItems.length} items</span>
+          <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider mt-2 sm:mt-0">{displayItems.length} items</span>
         </div>
       )}
 
-      {/* Real Item Grid */}
-      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* GRID */}
+      <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {displayItems.map((item) => {
           
           let formattedPhone = item.seller_phone.trim();
@@ -246,42 +287,45 @@ export default function Home() {
           const isLocalMatch = userLocation && (item.town.toLowerCase().includes(userLocation.toLowerCase()) || item.county.toLowerCase().includes(userLocation.toLowerCase()));
 
          return (
-            <div key={item.id} className="group bg-white rounded-xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col">
+            <article key={item.id} className="group bg-white rounded-xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transform hover:-translate-y-1 transition-all duration-200 flex flex-col">
               
-              {/* 1. IMAGE AREA WITH BEAUTIFUL OVERLAYS */}
+              {/* IMAGE */}
               <Link href={`/${item.id}`} className="relative h-48 w-full bg-gray-100 overflow-hidden block">
-                
                 {isLocalMatch && (
-                  <div className="absolute top-2 left-2 z-10 bg-green-500 text-white text-[10px] font-bold px-2 py-1 rounded-md shadow-sm uppercase tracking-wide">
-                    📍 Near You
+                  <div className="absolute top-3 left-3 z-10 bg-emerald-600 text-white text-[11px] font-bold px-2 py-1 rounded-md shadow-sm uppercase tracking-wide">
+                    📍 Near you
                   </div>
                 )}
 
-                <div className="absolute bottom-2 left-2 z-10 drop-shadow-md hover:scale-105 transition-transform">
+                <div className="absolute bottom-3 left-3 z-10 drop-shadow-md">
                   <SellerRating sellerId={item.seller_id} />
                 </div>
 
                 <Image 
-                  src={item.images[0]} 
+                  src={item.images?.[0] || ''} 
                   alt={item.title}
                   fill
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                   className="object-cover group-hover:scale-105 transition-transform duration-500"
                 />
               </Link>
 
-              {/* 2. COMPACT TEXT & ACTION AREA */}
+              {/* CONTENT */}
               <div className="p-4 flex flex-col grow">
-                
-                <Link href={`/item/${item.id}`} className="hover:text-green-600 transition-colors mb-1">
-                  <h3 className="font-semibold text-gray-900 line-clamp-2 leading-snug text-sm">{item.title}</h3>
-                </Link>
-                
-                <p className="text-lg font-black text-gray-900 mb-3">
-                  Ksh {item.price.toLocaleString()}
-                </p>
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <Link href={`/item/${item.id}`} className="hover:text-emerald-600 transition-colors">
+                      <h3 className="font-semibold text-gray-900 line-clamp-2 leading-snug text-sm">{item.title}</h3>
+                    </Link>
+                    <p className="text-xs text-gray-500 mt-1 truncate">{item.category || 'General'}</p>
+                  </div>
+                  <div className="ml-2 text-right">
+                    <p className="text-lg font-extrabold text-gray-900">Ksh {item.price.toLocaleString()}</p>
+                    <time className="text-xs text-gray-400">{new Date(item.created_at).toLocaleDateString()}</time>
+                  </div>
+                </div>
 
-                {/* HORIZONTAL ALIGNMENT: Location & Phone side-by-side */}
-                <div className="flex items-center justify-between gap-2 mb-4 mt-auto border-t border-gray-50 pt-3">
+                <div className="flex items-center justify-between gap-2 my-3 border-t border-gray-50 pt-3">
                   <div className="flex items-center gap-1.5 text-xs text-gray-500 min-w-0">
                     <MapPin className="h-3.5 w-3.5 shrink-0 text-gray-400" />
                     <span className="truncate">{item.town}</span>
@@ -293,18 +337,18 @@ export default function Home() {
                   </div>
                 </div>
 
-                {/* Official WhatsApp Button */}
                 <a 
                   href={waLink}
                   target="_blank"
                   rel="noopener noreferrer"
+                  aria-label={`Message seller about ${item.title} on WhatsApp`}
                   className="w-full flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#1DA851] text-white py-2.5 rounded-lg text-sm font-bold transition-colors shadow-sm"
                 >
                   <MessageCircle className="h-4 w-4" />
                   WhatsApp
                 </a>
               </div>
-            </div>
+            </article>
           );
         })}
       </section>

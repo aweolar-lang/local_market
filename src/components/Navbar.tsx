@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { User } from "@supabase/supabase-js"; // Strictly typing our user!
+import { User } from "@supabase/supabase-js"; // Strict typing for user
 import { Store, PlusCircle, LayoutDashboard, LogOut, LogIn } from "lucide-react";
 
 export default function Navbar() {
@@ -12,18 +12,20 @@ export default function Navbar() {
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    // 1. Check if the user is logged in right now
+    // 1. Check if the user is logged in on mount
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
     });
 
-    // 2. Listen for changes (e.g., if they just logged in or logged out)
+    // 2. Listen for auth changes and update the UI
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
     });
 
-    // Cleanup the listener when the component unmounts
-    return () => subscription.unsubscribe();
+    return () => {
+      // cleanup subscription
+      try { subscription.unsubscribe(); } catch (e) { /* noop */ }
+    };
   }, []);
 
   const handleLogout = async () => {
@@ -32,52 +34,68 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="bg-white border-b border-gray-100 sticky top-0 z-50">
+    <nav className="bg-white border-b border-gray-100 sticky top-0 z-50" role="navigation" aria-label="Main navigation">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16 items-center">
-          
-          {/* Left Side: Logo */}
-          <Link href="/" className="flex items-center gap-2 text-green-600 hover:text-green-700 transition-colors">
-            <Store className="h-6 w-6" />
+
+          {/* Left: Logo */}
+          <Link href="/" aria-label="Go to LocalSoko home" className="flex items-center gap-2 text-emerald-600 hover:text-emerald-700 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-200 rounded">
+            <Store className="h-6 w-6" aria-hidden="true" />
             <span className="font-bold text-xl tracking-tight text-gray-900">LocalSoko</span>
           </Link>
 
-          {/* Right Side: Navigation Links */}
-          <div className="flex items-center gap-4">
-            
-            {/* Always show the Post Ad button */}
-            <Link 
-              href="/sell" 
-              className="hidden sm:flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+          {/* Right: Actions */}
+          <div className="flex items-center gap-3">
+            {/* Post Ad (prominent on desktop, icon on mobile) */}
+            <Link
+              href="/sell"
+              className="hidden sm:inline-flex items-center gap-1.5 text-sm font-medium bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-300"
+              aria-label="Post an item for sale"
             >
-              <PlusCircle className="h-4 w-4" /> Post Ad
+              <PlusCircle className="h-4 w-4" />
+              <span>Post Ad</span>
             </Link>
 
-            {/* Dynamic Auth Buttons */}
+            <Link
+              href="/sell"
+              className="inline-flex sm:hidden items-center justify-center p-2 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-300"
+              aria-label="Post an item for sale"
+              title="Post Ad"
+            >
+              <PlusCircle className="h-5 w-5" />
+            </Link>
+
+            {/* Dynamic Auth area */}
             {user ? (
               <div className="flex items-center gap-3 border-l border-gray-200 pl-4 ml-2">
-                <Link 
-                  href="/dashboard" 
-                  className="flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-green-600 transition-colors"
+                <Link
+                  href="/dashboard"
+                  className="flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-emerald-600 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-200 rounded"
+                  aria-label="Go to dashboard"
                 >
-                  <LayoutDashboard className="h-4 w-4" /> 
+                  <LayoutDashboard className="h-4 w-4" />
                   <span className="hidden sm:inline">Dashboard</span>
                 </Link>
-                <button 
+
+                <button
+                  type="button"
                   onClick={handleLogout}
-                  className="flex items-center gap-1.5 text-sm font-medium text-red-500 hover:text-red-600 transition-colors"
+                  className="flex items-center gap-1.5 text-sm font-medium text-red-500 hover:text-red-600 transition-colors focus:outline-none focus:ring-2 focus:ring-red-200 rounded"
+                  aria-label="Sign out"
                 >
-                  <LogOut className="h-4 w-4" /> 
+                  <LogOut className="h-4 w-4" />
                   <span className="hidden sm:inline">Logout</span>
                 </button>
               </div>
             ) : (
               <div className="flex items-center gap-3 border-l border-gray-200 pl-4 ml-2">
-                <Link 
-                  href="/login" 
-                  className="flex items-center gap-1.5 bg-gray-900 hover:bg-black text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors"
+                <Link
+                  href="/login"
+                  className="inline-flex items-center gap-1.5 bg-gray-900 hover:bg-black text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-300"
+                  aria-label="Sign in to LocalSoko"
                 >
-                  <LogIn className="h-4 w-4" /> Login
+                  <LogIn className="h-4 w-4" />
+                  <span>Login</span>
                 </Link>
               </div>
             )}
