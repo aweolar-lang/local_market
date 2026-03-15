@@ -26,20 +26,6 @@ export const metadata: Metadata = {
       "Buy and sell locally — discover second-hand goods and services from sellers near you.",
     url: new URL("/", metadataBaseUrl).toString(),
     siteName: "LocalSoko",
-    images: [
-    {
-      url: "/opengraph-image.png",
-      width: 1200,
-      height: 630,
-      alt: "LocalSoko marketplace preview",
-    },
-    {
-      url: "/opengraph-square.png",
-      width: 1200,
-      height: 1200,
-      alt: "LocalSoko square preview",
-    },
-  ],
     locale: "en_US",
     type: "website",
     
@@ -49,7 +35,6 @@ export const metadata: Metadata = {
     title: "LocalSoko",
     description:
       "Buy and sell locally — discover second-hand goods and services from sellers near you.",
-    images: ["/twitter-image.png"],
   },
   robots: {
     index: true,
