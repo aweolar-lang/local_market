@@ -19,22 +19,37 @@ export const metadata: Metadata = {
   },
   description:
     "Buy and sell locally — discover second-hand goods and services from sellers near you.",
+  manifest: "/site.webmanifest",
   openGraph: {
     title: "LocalSoko | Neighborhood Second-Hand Market",
     description:
       "Buy and sell locally — discover second-hand goods and services from sellers near you.",
     url: new URL("/", metadataBaseUrl).toString(),
     siteName: "LocalSoko",
-    images: ["/og-default.png"],
+    images: [
+    {
+      url: "/opengraph-image.png",
+      width: 1200,
+      height: 630,
+      alt: "LocalSoko marketplace preview",
+    },
+    {
+      url: "/opengraph-square.png",
+      width: 1200,
+      height: 1200,
+      alt: "LocalSoko square preview",
+    },
+  ],
     locale: "en_US",
     type: "website",
+    
   },
   twitter: {
     card: "summary_large_image",
     title: "LocalSoko",
     description:
       "Buy and sell locally — discover second-hand goods and services from sellers near you.",
-    images: ["/og-default.png"],
+    images: ["/twitter-image.png"],
   },
   robots: {
     index: true,
