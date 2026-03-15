@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { User } from '@supabase/supabase-js';
-import { Camera, DollarSign, MapPin, Tag, AlignLeft, Image as ImageIcon, Phone, X, List } from "lucide-react"; 
+import { Camera, DollarSign, MapPin, Tag, AlignLeft, Image as ImageIcon, Phone, X, List, Sparkles } from "lucide-react"; 
 import Image from "next/image";
 
 const KENYAN_COUNTIES = [
@@ -31,6 +31,7 @@ export default function SellItemPage() {
   const [title, setTitle] = useState("");
   const [price, setPrice] = useState("");
   const [category, setCategory] = useState(""); 
+  const [condition, setCondition] = useState("");
   const [description, setDescription] = useState("");
   const [county, setCounty] = useState("");
   const [town, setTown] = useState("");
@@ -113,6 +114,7 @@ export default function SellItemPage() {
             title,
             price: parseFloat(price),
             category,
+            condition,
             description,
             county,
             town,
@@ -149,16 +151,33 @@ export default function SellItemPage() {
 
       <form onSubmit={handleSubmit} className="bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-gray-100 space-y-6">
         
-        {/* Title Row */}
-        <div>
-          <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-            <Tag className="h-4 w-4 text-green-500" /> Item Title
-          </label>
-          <input 
-            type="text" required value={title} onChange={(e) => setTitle(e.target.value)}
-            placeholder="e.g., Used Samsung S22" 
-            className="w-full px-4 py-3 border border-gray-200 text-black rounded-xl focus:ring-2 focus:ring-green-500 outline-none"
-          />
+        {/* Title & Condition Row */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+              <Tag className="h-4 w-4 text-green-500" /> Item Title
+            </label>
+            <input 
+              type="text" required value={title} onChange={(e) => setTitle(e.target.value)}
+              placeholder="e.g., Used Samsung S22" 
+              className="w-full px-4 py-3 border border-gray-200 text-black rounded-xl focus:ring-2 focus:ring-green-500 outline-none"
+            />
+          </div>
+          <div>
+            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+              <Sparkles className="h-4 w-4 text-green-500" /> Condition
+            </label>
+            <select 
+              required 
+              value={condition} 
+              onChange={(e) => setCondition(e.target.value)} 
+              className="w-full px-4 py-3 border text-black border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none bg-white"
+            >
+              <option value="" disabled>Select...</option>
+              <option value="New">Brand New</option>
+              <option value="Secondhand">Secondhand</option>
+            </select>
+          </div>
         </div>
 
     

@@ -32,6 +32,7 @@ interface Item {
   status: string;
   created_at: string;
   description?: string;
+  condition?: string;
   category?: string;
 }
 
@@ -297,8 +298,19 @@ export default function Home() {
                   </div>
                 )}
 
-                <div className="absolute bottom-3 left-3 z-10 drop-shadow-md">
+                {/* Seller Rating AND Condition Badge */}
+                <div className="absolute bottom-3 left-3 z-10 drop-shadow-md flex items-center gap-2">
                   <SellerRating sellerId={item.seller_id} />
+                  
+                  {item.condition && (
+                    <span className={`text-[10px] font-bold px-2 py-1 rounded-md shadow-sm uppercase tracking-wider backdrop-blur-md border ${
+                      item.condition === 'New' 
+                        ? 'bg-blue-600/90 text-white border-blue-400/50' 
+                        : 'bg-gray-800/80 text-white border-gray-600/50'
+                    }`}>
+                      {item.condition}
+                    </span>
+                  )}
                 </div>
 
                 <Image 
