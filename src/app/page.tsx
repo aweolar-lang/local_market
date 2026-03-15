@@ -259,19 +259,8 @@ export default function Home() {
         </div>
       )}
 
-      {/* RESULTS HEADER */}
-      {!loading && displayItems.length > 0 && (
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end px-1">
-          <h2 className="text-lg font-bold text-gray-900">
-            {userLocation 
-              ? `Found near "${userLocation}"` 
-              : selectedCategory !== "All" 
-                ? `${selectedCategory} Listings` 
-                : "Fresh Listings"}
-          </h2>
-          <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider mt-2 sm:mt-0">{displayItems.length} items</span>
-        </div>
-      )}
+      {/* RESULTS HEADER - temporary remove*/}
+   
 
       {/* GRID */}
       <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
