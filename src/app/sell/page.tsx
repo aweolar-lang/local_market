@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { User } from '@supabase/supabase-js';
-import { Camera, DollarSign, MapPin, Tag, AlignLeft, Image as ImageIcon, Phone, X } from "lucide-react"; 
+import { Camera, DollarSign, MapPin, Tag, AlignLeft, Image as ImageIcon, Phone, X, List } from "lucide-react"; 
 import Image from "next/image";
 
 const KENYAN_COUNTIES = [
@@ -17,6 +17,11 @@ const KENYAN_COUNTIES = [
   "Trans Nzoia", "Turkana", "Uasin Gishu", "Vihiga", "Wajir", "West Pokot"
 ];
 
+
+const CATEGORIES = [
+  "Electronics", "Vehicles", "Furniture", "Fashion", "Services", "Other"
+];
+
 export default function SellItemPage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -25,12 +30,13 @@ export default function SellItemPage() {
   // Form State
   const [title, setTitle] = useState("");
   const [price, setPrice] = useState("");
+  const [category, setCategory] = useState(""); 
   const [description, setDescription] = useState("");
   const [county, setCounty] = useState("");
   const [town, setTown] = useState("");
   const [sellerPhone, setSellerPhone] = useState(""); 
   
-  //Array to hold multiple images
+  // Array to hold multiple images
   const [imageFiles, setImageFiles] = useState<File[]>([]);
 
   useEffect(() => {
@@ -45,16 +51,15 @@ export default function SellItemPage() {
     checkUser();
   }, [router]);
 
-  //Handle Multiple Images
+  // Handle Multiple Images
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const selectedFiles = Array.from(e.target.files);
-      // Optional: Limit to a maximum of 5 images so they don't upload too many
       setImageFiles((prev) => [...prev, ...selectedFiles].slice(0, 5));
     }
   };
 
-  //Remove a specific image from the preview
+  // Remove a specific image from the preview
   const removeImage = (indexToRemove: number) => {
     setImageFiles((prev) => prev.filter((_, index) => index !== indexToRemove));
   };
@@ -76,7 +81,7 @@ export default function SellItemPage() {
     setIsSubmitting(true);
 
     try {
-      //Upload Multiple Images in Parallel
+      // Upload Multiple Images in Parallel
       const uploadPromises = imageFiles.map(async (file) => {
         const fileExt = file.name.split('.').pop();
         const fileName = `${Math.random()}.${fileExt}`;
@@ -107,11 +112,12 @@ export default function SellItemPage() {
             seller_id: user.id,
             title,
             price: parseFloat(price),
+            category,
             description,
             county,
             town,
             seller_phone: sellerPhone, 
-            images: uploadedUrls, // <-- Saving ALL URLs to the array!
+            images: uploadedUrls, 
             status: 'pending_payment'
           }
         ])
@@ -143,18 +149,20 @@ export default function SellItemPage() {
 
       <form onSubmit={handleSubmit} className="bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-gray-100 space-y-6">
         
-        {/* Title & Price Row */}
+        {/* Title Row */}
+        <div>
+          <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+            <Tag className="h-4 w-4 text-green-500" /> Item Title
+          </label>
+          <input 
+            type="text" required value={title} onChange={(e) => setTitle(e.target.value)}
+            placeholder="e.g., Used Samsung S22" 
+            className="w-full px-4 py-3 border border-gray-200 text-black rounded-xl focus:ring-2 focus:ring-green-500 outline-none"
+          />
+        </div>
+
+    
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-              <Tag className="h-4 w-4 text-green-500" /> Item Title
-            </label>
-            <input 
-              type="text" required value={title} onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g., Used Samsung S22" 
-              className="w-full px-4 py-3 border border-gray-200 text-black rounded-xl focus:ring-2 focus:ring-green-500 outline-none"
-            />
-          </div>
           <div>
             <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
               <DollarSign className="h-4 w-4 text-green-500" /> Price (Ksh)
@@ -162,8 +170,26 @@ export default function SellItemPage() {
             <input 
               type="number" required min="1" value={price} onChange={(e) => setPrice(e.target.value)}
               placeholder="e.g., 75000" 
-              className="w-full px-4 py-3 border text-black  border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none"
+              className="w-full px-4 py-3 border text-black border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none"
             />
+          </div>
+          <div>
+            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+              <List className="h-4 w-4 text-green-500" /> Category
+            </label>
+            <select 
+              required 
+              value={category} 
+              onChange={(e) => setCategory(e.target.value)} 
+              className="w-full px-4 py-3 border text-black border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none bg-white"
+            >
+              <option value="" disabled>Select Category...</option>
+              {CATEGORIES.map((catName) => (
+                <option key={catName} value={catName}>
+                  {catName}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 
@@ -175,7 +201,7 @@ export default function SellItemPage() {
           <textarea 
             required rows={3} value={description} onChange={(e) => setDescription(e.target.value)}
             placeholder="Describe the condition, features..." 
-            className="w-full px-4 py-3 border border-gray-200 text-black  rounded-xl focus:ring-2 focus:ring-green-500 outline-none resize-none"
+            className="w-full px-4 py-3 border border-gray-200 text-black rounded-xl focus:ring-2 focus:ring-green-500 outline-none resize-none"
           />
         </div>
 
@@ -219,7 +245,7 @@ export default function SellItemPage() {
           <input 
             type="tel" required value={sellerPhone} onChange={(e) => setSellerPhone(e.target.value)}
             placeholder="e.g., 254712345678" 
-            className="w-full px-4 py-3 border border-gray-200 text-black  rounded-xl focus:ring-2 focus:ring-green-500 outline-none"
+            className="w-full px-4 py-3 border border-gray-200 text-black rounded-xl focus:ring-2 focus:ring-green-500 outline-none"
           />
           <p className="text-xs text-gray-500 mt-1">Include country code. Buyers will use this to contact you.</p>
         </div>
@@ -236,10 +262,10 @@ export default function SellItemPage() {
           <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-xl hover:bg-gray-50 transition-colors cursor-pointer relative bg-gray-50/50">
             <input 
               type="file" 
-              multiple // <-- Allows selecting multiple!
+              multiple 
               accept="image/png, image/jpeg, image/jpg" 
               onChange={handleImageChange} 
-              required={imageFiles.length === 0} // Only require if array is empty
+              required={imageFiles.length === 0} 
               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
             />
             <div className="space-y-2 text-center">
@@ -255,7 +281,6 @@ export default function SellItemPage() {
             <div className="flex gap-3 mt-4 overflow-x-auto pb-2">
               {imageFiles.map((file, index) => (
                 <div key={index} className="relative h-24 w-24 shrink-0 rounded-xl overflow-hidden border border-gray-200 group">
-                  {/* Generate local preview URL for visibility */}
                   <Image
                     src={URL.createObjectURL(file)}
                     alt={`Preview ${index}`}
@@ -264,7 +289,6 @@ export default function SellItemPage() {
                     height={96}
                     style={{ objectFit: "cover" }}
                   />
-                  {/* Remove Button */}
                   <button 
                     type="button" 
                     onClick={() => removeImage(index)} 
@@ -272,7 +296,6 @@ export default function SellItemPage() {
                   >
                     <X className="h-3.5 w-3.5" />
                   </button>
-                  {/* Label for Cover Photo */}
                   {index === 0 && (
                     <div className="absolute bottom-0 inset-x-0 bg-green-500 text-white text-[10px] font-bold text-center py-0.5">
                       COVER
