@@ -1,9 +1,62 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Mail, Phone, MapPin, Send, MessageSquare } from "lucide-react";
+import { ArrowLeft, Mail, Phone, MapPin, Send, MessageSquare, CheckCircle, Loader2 } from "lucide-react";
 
 export default function ContactPage() {
+  // Form State
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [message, setMessage] = useState("");
+  
+  // Submission Status State
+  const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setStatus("submitting");
+
+    try {
+      const response = await fetch("https://api.web3forms.com/submit", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          access_key: "38be796f-78dd-4efd-a0b6-ea008cb56266", 
+          name: `${firstName} ${lastName}`,
+          email: email,
+          message: message,
+          subject: "New Contact Form Submission - LocalSoko", 
+          from_name: "LocalSoko Contact Form"
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setStatus("success");
+        // Clear the form
+        setFirstName("");
+        setLastName("");
+        setEmail("");
+        setMessage("");
+        
+        // Reset the success message after 5 seconds
+        setTimeout(() => setStatus("idle"), 5000);
+      } else {
+        console.error("Web3Forms Error:", result);
+        setStatus("error");
+      }
+    } catch (error) {
+      console.error("Submission Error:", error);
+      setStatus("error");
+    }
+  };
+
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-12">
       <Link href="/" className="inline-flex items-center gap-2 text-sm font-medium text-green-600 hover:text-green-700 mb-8 transition-colors">
@@ -69,13 +122,16 @@ export default function ContactPage() {
               <h2 className="text-2xl font-bold text-gray-900">Send a Message</h2>
             </div>
             
-            <form className="space-y-5" onSubmit={(e) => e.preventDefault()}>
+            <form className="space-y-5" onSubmit={handleSubmit}>
               <div className="grid grid-cols-2 gap-5">
                 <div className="col-span-2 sm:col-span-1">
                   <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
                   <input 
                     type="text" 
-                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition-all"
+                    required
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900 transition-all"
                     placeholder="John"
                   />
                 </div>
@@ -83,7 +139,10 @@ export default function ContactPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
                   <input 
                     type="text" 
-                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition-all"
+                    required
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900 transition-all"
                     placeholder="Doe"
                   />
                 </div>
@@ -93,7 +152,10 @@ export default function ContactPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
                 <input 
                   type="email" 
-                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition-all"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900 transition-all"
                   placeholder="john@example.com"
                 />
               </div>
@@ -102,19 +164,38 @@ export default function ContactPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Message</label>
                 <textarea 
                   rows={4}
-                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition-all resize-none"
+                  required
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900 transition-all resize-none"
                   placeholder="How can we help you?"
                 ></textarea>
               </div>
 
-              <button 
-                type="button"
-                onClick={() => alert("Form UI is ready! We will connect this to a database or email service later.")}
-                className="w-full flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition-colors shadow-sm"
-              >
-                <Send className="h-4 w-4" />
-                Send Message
-              </button>
+              {/* Status Messages */}
+              {status === "error" && (
+                <p className="text-sm text-red-600 font-medium">Something went wrong. Please try again.</p>
+              )}
+
+              {status === "success" ? (
+                <div className="w-full flex items-center justify-center gap-2 bg-green-50 text-green-700 font-bold py-3 px-4 rounded-lg border border-green-200">
+                  <CheckCircle className="h-5 w-5" />
+                  Message Sent Successfully!
+                </div>
+              ) : (
+                <button 
+                  type="submit"
+                  disabled={status === "submitting"}
+                  className="w-full flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition-colors shadow-sm disabled:bg-green-400"
+                >
+                  {status === "submitting" ? (
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  ) : (
+                    <Send className="h-5 w-5" />
+                  )}
+                  {status === "submitting" ? "Sending..." : "Send Message"}
+                </button>
+              )}
             </form>
           </div>
 
