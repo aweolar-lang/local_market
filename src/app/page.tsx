@@ -219,7 +219,7 @@ export default function Home() {
       {/* RESULTS HEADER (Fixes Heading Hierarchy) */}
       {!loading && (
         <div className="flex items-center justify-between border-b border-gray-200 pb-2">
-          <h2 className="text-xl md:text-2xl font-extrabold text-gray-900 tracking-tight">
+          <h2 className="text-xl md:text-2xl font-extrabold text-gray-500 tracking-tight">
             {isFiltering ? 'Search Results' : 'Fresh Recommendations'}
           </h2>
           <span className="text-sm font-medium text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
