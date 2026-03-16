@@ -1,5 +1,5 @@
 "use client";
-
+import { toast } from 'sonner';
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
@@ -128,8 +128,10 @@ export default function SellItemPage() {
 
       if (dbError) throw dbError;
 
-      alert("Item saved! Redirecting to payment...");
-      router.push(`/pay/${newItem.id}`); 
+      toast.success("Item saved! Redirecting to payment...");
+      setTimeout(() => {
+        router.push(`/pay/${newItem.id}`); 
+      }, 1500);
 
     } catch (error) {
       console.error("Save Error:", error);

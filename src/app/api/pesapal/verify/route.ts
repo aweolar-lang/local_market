@@ -1,17 +1,16 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-// We need a special "Service Role" key to securely update the database from the backend
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY! // We will add this to your .env.local!
+  process.env.SUPABASE_SERVICE_ROLE_KEY! 
 );
 
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const trackingId = searchParams.get('trackingId');
-    const merchantRef = searchParams.get('merchantRef'); // e.g., "item-uuid-1234567890"
+    const merchantRef = searchParams.get('merchantRef');
 
   if (!trackingId || !merchantRef) {
       return NextResponse.json({ error: "Missing parameters" }, { status: 400 });

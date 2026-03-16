@@ -25,13 +25,12 @@ export async function POST(req: Request) {
       })
     });
 
-    const authData = await authResponse.json();
-    console.log("Pesapal Raw Auth Response:", authData); 
+    const authData = await authResponse.json(); 
     
     const token = authData.token;
 
     if (!token) {
-      console.error("Auth failed. Full response:", authData);
+      console.error("Auth failed. Full response:");
       throw new Error("Could not authenticate with Pesapal");
     }
 
@@ -39,7 +38,7 @@ export async function POST(req: Request) {
     const orderData = {
       id: `${itemId}-${Date.now()}`, // Unique merchant reference
       currency: "KES",
-      amount: 2.00,
+      amount: 1.00,
       description: `Listing fee for: ${title}`,
       callback_url: `${process.env.NEXT_PUBLIC_SITE_URL}/pay/callback`, 
       notification_id: process.env.PESAPAL_IPN_ID, 

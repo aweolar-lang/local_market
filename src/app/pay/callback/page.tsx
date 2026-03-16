@@ -31,7 +31,6 @@ function CallbackContent() {
         } 
         else if ((data.paymentStatus === "PENDING" || data.paymentStatus === "INVALID") && attempts < 10) {
           // If it's still processing, wait 3 seconds and try again (up to 10 times)
-          console.log(`Payment still pending. Retrying... (Attempt ${attempts + 1})`);
           setTimeout(() => verifyPayment(attempts + 1), 3000);
         } 
         else {

@@ -51,7 +51,7 @@ export default function LoginPage() {
 
   return (
     <div className="max-w-md mx-auto py-16 px-4">
-      <div className="text-center mb-8">
+      <div className="text-center mb-8 bg-red-600">
         <h1 className="text-3xl font-bold text-gray-100">Welcome to LocalSoko</h1>
         <p className="text-gray-300 mt-2">Log in or create an account to start selling.</p>
       </div>
