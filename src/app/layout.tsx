@@ -1,8 +1,12 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { useEffect } from 'react';
+import { usePathname } from 'next/navigation';
+import Script from 'next/script';
 import Navbar from "@/components/Navbar";
 import { Analytics } from "@vercel/analytics/next";
+import { GA_MEASUREMENT_ID, pageview } from '../lib/gtag';
 import Footer from "@/components/Footer";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
@@ -47,8 +51,35 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+
+  const pathname = usePathname();
+
+  // Track pageview on route change
+  useEffect(() => {
+    pageview(pathname);
+  }, [pathname]);
+
   return (
     <html lang="en">
+      <head>
+        {/* Google Analytics Script */}
+        <Script
+          strategy="afterInteractive"
+          src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
+        />
+        <Script
+          id="gtag-init"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', '${GA_MEASUREMENT_ID}', { page_path: window.location.pathname });
+            `,
+          }}
+        />
+      </head>
       <body
         className={`${inter.className} bg-gray-50 text-gray-900 antialiased min-h-screen flex flex-col`}
       >
