@@ -17,12 +17,12 @@ const config = {
   async additionalPaths() {
     const { data: items } = await supabase
       .from('items')
-      .select('id');
+      .select('slug');
 
     if (!items) return [];
 
     return items.map(item => ({
-      loc: `/${item.id}`,
+      loc: `/${item.slug}`,
       changefreq: 'daily',
       priority: 0.9,
       lastmod: new Date().toISOString(),

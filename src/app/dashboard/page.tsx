@@ -15,6 +15,7 @@ interface Item {
   images: string[];
   status: string;
   created_at: string;
+  slug: string;
 }
 
 export default function DashboardPage() {
@@ -152,7 +153,7 @@ export default function DashboardPage() {
             <div className="flex flex-wrap justify-center gap-2 w-full md:w-auto">
               {item.status !== "sold" && (
                 <Link 
-                  href={`/${item.id}`}
+                  href={`/${item.slug}`}
                   className="flex items-center gap-1.5 px-4 py-2 bg-gray-50 hover:bg-gray-100 text-gray-700 rounded-lg text-sm font-medium transition-colors border border-gray-200"
                 >
                   <ExternalLink className="h-4 w-4" /> View

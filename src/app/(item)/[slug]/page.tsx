@@ -10,6 +10,7 @@ export const dynamic = 'force-dynamic';
 // Strictly typing our expected data
 interface Item {
   id: string;
+  slug: string; // Added slug here
   title: string;
   price: number;
   description: string;
@@ -22,14 +23,14 @@ interface Item {
   created_at: string;
 }
 
-export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const resolvedParams = await params;
-  const id = resolvedParams.id;
+  const slug = resolvedParams.slug; // Using slug instead of id
 
   const { data: item } = await supabase
     .from('items')
     .select('*')
-    .eq('id', id)
+    .eq('slug', slug) // Searching by slug
     .single();
 
   if (!item) {
@@ -47,7 +48,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     openGraph: {
       title: `${item.title} - Ksh ${item.price.toLocaleString()}`,
       description: `Located in ${item.town}, ${item.county}. Click to view contact details!`,
-      url: `${siteBase}/${item.id}`,
+      url: `${siteBase}/${item.slug}`, // Using slug for the URL
       siteName: 'LocalSoko',
       images: [
         {
@@ -68,15 +69,15 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   };
 }
 
-export default async function ItemDetailsPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function ItemDetailsPage({ params }: { params: Promise<{ slug: string }> }) {
   const resolvedParams = await params;
-  const id = resolvedParams.id;
+  const slug = resolvedParams.slug;
 
-  // Fetch the specific item from Supabase
+  // Fetch the specific item from Supabase using the slug
   const { data, error } = await supabase
     .from('items')
     .select('*')
-    .eq('id', id)
+    .eq('slug', slug)
     .single();
 
   if (error) {
@@ -201,4 +202,3 @@ export default async function ItemDetailsPage({ params }: { params: Promise<{ id
     </div>
   );
 }
-

@@ -3,7 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import { Analytics } from "@vercel/analytics/next";
-import { GoogleAnalytics } from '@next/third-parties/google'
+import { GoogleAnalytics } from '@next/third-parties/google';
 import Footer from "@/components/Footer";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
@@ -29,7 +29,6 @@ export const metadata: Metadata = {
     siteName: "LocalSoko",
     locale: "en_US",
     type: "website",
-    
   },
   twitter: {
     card: "summary_large_image",
@@ -40,7 +39,7 @@ export const metadata: Metadata = {
   robots: {
     index: true,
     follow: true,
-    "googleBot": {
+    googleBot: {
       index: true,
       follow: true,
     },
@@ -49,22 +48,19 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" className="scroll-smooth">
       <body
-        className={`${inter.className} bg-gray-50 text-gray-900 antialiased min-h-screen flex flex-col`}
+        className={`${inter.className} bg-gray-50 text-gray-900 antialiased min-h-screen flex flex-col selection:bg-emerald-200 selection:text-emerald-900`}
       >
-      
         <a
           href="#main-content"
-          className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-white px-3 py-2 rounded shadow z-50"
+          className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-emerald-700 text-white font-semibold px-4 py-2 rounded-md shadow-lg z-50 outline-none ring-2 ring-emerald-400 ring-offset-2"
         >
           Skip to content
         </a>
 
-    
         <Navbar />
 
-       
         <main
           id="main-content"
           className="grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"
