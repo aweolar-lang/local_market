@@ -315,7 +315,7 @@ export default function Home() {
               <div className="p-4 flex flex-col grow">
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
-                    <Link href={`/item/${item.id}`} className="hover:text-emerald-600 transition-colors">
+                    <Link href={`/${item.id}`} className="hover:text-emerald-600 transition-colors">
                       <h3 className="font-semibold text-gray-900 line-clamp-2 leading-snug text-sm">{item.title}</h3>
                     </Link>
                     <p className="text-xs text-gray-500 mt-1 truncate">{item.category || 'General'}</p>
