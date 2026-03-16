@@ -39,7 +39,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     };
   }
 
-  const siteBase = process.env.NEXT_PUBLIC_SITE_URL || 'https://your-website-url.com';
+  const siteBase = process.env.NEXT_PUBLIC_SITE_URL || 'https://localsoko.com';
 
   return {
     title: `${item.title} - Ksh ${item.price.toLocaleString()}`,
@@ -47,7 +47,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     openGraph: {
       title: `${item.title} - Ksh ${item.price.toLocaleString()}`,
       description: `Located in ${item.town}, ${item.county}. Click to view contact details!`,
-      url: `${siteBase}/item/${item.id}`,
+      url: `${siteBase}/${item.id}`,
       siteName: 'LocalSoko',
       images: [
         {

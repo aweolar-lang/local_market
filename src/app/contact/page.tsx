@@ -96,7 +96,7 @@ export default function ContactPage() {
                 <div>
                   <p className="text-sm text-green-200 font-medium">Call Us (Mon-Fri, 9am-5pm)</p>
                   <a href="tel:+254700000000" className="text-lg font-semibold hover:text-green-200 transition-colors">
-                    +254 700 000 000
+                    +254 769 773 480
                   </a>
                 </div>
               </div>
