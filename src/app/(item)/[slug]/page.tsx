@@ -4,6 +4,7 @@ import Link from "next/link";
 import { MapPin, ArrowLeft, ShieldAlert, Tag, MessageCircle, Calendar, Phone, Sparkles, PackageOpen } from "lucide-react";
 import ImageGallery from "@/components/ImageGallery";
 import ReviewSeller from "@/components/ReviewSeller";
+import { notFound } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
 
@@ -79,14 +80,11 @@ export default async function ItemDetailsPage({ params }: { params: Promise<{ sl
     .from('items')
     .select('*')
     .eq('slug', slug)
-    .single();
+    .maybeSingle();
 
   if (error) {
     return (
-      <div className="p-8 max-w-2xl mx-auto mt-10 bg-red-50 border border-red-200 text-red-800 rounded-xl">
-        <h2 className="font-bold text-lg mb-2">Error loading item</h2>
-        <pre className="whitespace-pre-wrap text-xs">{JSON.stringify(error, null, 2)}</pre>
-      </div>
+      notFound()
     );
   }
 
