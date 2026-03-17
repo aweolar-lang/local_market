@@ -1,7 +1,7 @@
 import { supabase } from "@/lib/supabase";
 import { Metadata } from 'next';
 import Link from "next/link";
-import { MapPin, ArrowLeft, ShieldCheck, Tag, MessageCircle, Calendar, Phone } from "lucide-react";
+import { MapPin, ArrowLeft, ShieldAlert, Tag, MessageCircle, Calendar, Phone, Sparkles, PackageOpen } from "lucide-react";
 import ImageGallery from "@/components/ImageGallery";
 import ReviewSeller from "@/components/ReviewSeller";
 
@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic';
 // Strictly typing our expected data
 interface Item {
   id: string;
-  slug: string; // Added slug here
+  slug: string; 
   title: string;
   price: number;
   description: string;
@@ -21,16 +21,18 @@ interface Item {
   images: string[];
   status: string;
   created_at: string;
+  condition?: string; 
+  category?: string;  
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const resolvedParams = await params;
-  const slug = resolvedParams.slug; // Using slug instead of id
+  const slug = resolvedParams.slug; 
 
   const { data: item } = await supabase
     .from('items')
     .select('*')
-    .eq('slug', slug) // Searching by slug
+    .eq('slug', slug) 
     .single();
 
   if (!item) {
@@ -48,7 +50,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     openGraph: {
       title: `${item.title} - Ksh ${item.price.toLocaleString()}`,
       description: `Located in ${item.town}, ${item.county}. Click to view contact details!`,
-      url: `${siteBase}/${item.slug}`, // Using slug for the URL
+      url: `${siteBase}/${item.slug}`, 
       siteName: 'LocalSoko',
       images: [
         {
@@ -73,7 +75,6 @@ export default async function ItemDetailsPage({ params }: { params: Promise<{ sl
   const resolvedParams = await params;
   const slug = resolvedParams.slug;
 
-  // Fetch the specific item from Supabase using the slug
   const { data, error } = await supabase
     .from('items')
     .select('*')
@@ -83,7 +84,7 @@ export default async function ItemDetailsPage({ params }: { params: Promise<{ sl
   if (error) {
     return (
       <div className="p-8 max-w-2xl mx-auto mt-10 bg-red-50 border border-red-200 text-red-800 rounded-xl">
-        <h2 className="font-bold text-lg mb-2"> Error loading item</h2>
+        <h2 className="font-bold text-lg mb-2">Error loading item</h2>
         <pre className="whitespace-pre-wrap text-xs">{JSON.stringify(error, null, 2)}</pre>
       </div>
     );
@@ -91,10 +92,13 @@ export default async function ItemDetailsPage({ params }: { params: Promise<{ sl
 
   if (!data) {
     return (
-      <div className="p-8 max-w-2xl mx-auto mt-10 bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-xl text-center">
+      <div className="p-8 max-w-2xl mx-auto mt-10 bg-orange-50 border border-orange-200 text-orange-800 rounded-2xl text-center shadow-sm">
+        <PackageOpen className="h-12 w-12 mx-auto text-orange-400 mb-3" />
         <h2 className="font-bold text-xl mb-2">Item Unavailable</h2>
-        <p className="mb-6 text-yellow-700">This item has been removed or does not exist.</p>
-        <Link href="/" className="inline-block bg-yellow-600 text-white px-6 py-2 rounded-lg font-medium">Browse other items</Link>
+        <p className="mb-6 text-orange-700">This item has been sold, removed, or does not exist.</p>
+        <Link href="/" className="inline-block bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-lg font-bold transition-colors">
+          Browse other items
+        </Link>
       </div>
     );
   }
@@ -116,86 +120,115 @@ export default async function ItemDetailsPage({ params }: { params: Promise<{ sl
   const waLink = `https://wa.me/${formattedPhone}?text=${waMessage}`;
 
   return (
-    <div className="max-w-6xl mx-auto py-10 px-4 sm:px-6">
+    <div className="max-w-6xl mx-auto py-8 px-4 sm:px-6">
 
       {/* Back Navigation */}
       <div className="mb-6">
-        <Link href="/" className="inline-flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors bg-white px-4 py-2 rounded-full shadow-sm border border-gray-100" aria-label="Back to listings">
+        <Link href="/" className="inline-flex items-center gap-2 text-sm font-bold text-emerald-700 hover:text-emerald-800 transition-colors bg-emerald-50 hover:bg-emerald-100 px-4 py-2 rounded-full shadow-sm border border-emerald-100">
           <ArrowLeft className="h-4 w-4" />
           Back to listings
         </Link>
       </div>
 
       {/* Main Card */}
-      <div className="bg-white rounded-3xl shadow-md border border-gray-100 overflow-hidden flex flex-col lg:flex-row">
+      <div className="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col lg:flex-row">
 
         {/* Left: Image gallery */}
-        <div className="w-full lg:w-1/2 bg-gray-50 p-4 lg:p-6 border-b lg:border-b-0 lg:border-r border-gray-100">
+        <div className="w-full lg:w-1/2 bg-gray-50/50 p-4 lg:p-6 border-b lg:border-b-0 lg:border-r border-gray-100">
           <ImageGallery images={item.images} />
         </div>
 
         {/* Right: Details */}
-        <div className="w-full lg:w-1/2 p-6 lg:p-8 flex flex-col">
+        <div className="w-full lg:w-1/2 p-6 lg:p-10 flex flex-col">
 
-          <div className="mb-4">
-            <div className="flex items-center justify-between mb-4">
-              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide bg-emerald-100 text-emerald-700">
-                <Tag className="h-3 w-3" /> For Sale
+          {/* Header Tags */}
+          <div className="flex flex-wrap items-center gap-2 mb-4">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800">
+              <Tag className="h-3.5 w-3.5" /> {item.category || 'For Sale'}
+            </span>
+            
+            {item.condition && (
+              <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-bold uppercase tracking-wider border ${
+                item.condition === 'New' 
+                  ? 'bg-blue-50 text-blue-700 border-blue-200' 
+                  : 'bg-gray-100 text-gray-700 border-gray-200'
+              }`}>
+                <Sparkles className="h-3.5 w-3.5" /> {item.condition}
               </span>
-              <span className="flex items-center gap-1 text-xs font-medium text-gray-400">
-                <Calendar className="h-3.5 w-3.5" />
-                Posted {postedDate}
-              </span>
+            )}
+
+            <span className="ml-auto flex items-center gap-1.5 text-xs font-semibold text-gray-400">
+              <Calendar className="h-3.5 w-3.5" />
+              {postedDate}
+            </span>
+          </div>
+
+          {/* Title & Price */}
+          <div className="mb-6">
+            <h1 className="text-2xl md:text-3xl lg:text-4xl font-extrabold text-gray-900 leading-tight mb-3">
+              {item.title}
+            </h1>
+            <p className="text-3xl md:text-4xl font-black text-emerald-600 tracking-tight">
+              Ksh {item.price.toLocaleString()}
+            </p>
+          </div>
+
+          {/* Location Bar */}
+          <div className="flex items-center gap-3 text-gray-700 bg-gray-50 px-5 py-4 rounded-2xl border border-gray-100 mb-8">
+            <div className="bg-white p-2 rounded-full shadow-sm border border-gray-100">
+              <MapPin className="h-5 w-5 text-emerald-600" />
+            </div>
+            <div>
+              <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider">Location</p>
+              <span className="font-bold text-gray-900 text-lg">{item.town}, {item.county}</span>
+            </div>
+          </div>
+
+          {/* Description */}
+          <div className="prose prose-sm text-gray-600 leading-relaxed whitespace-pre-wrap mb-8">
+            <h3 className="text-sm font-bold uppercase tracking-wider text-gray-900 border-b border-gray-100 pb-2">Description</h3>
+            <div className="mt-4 text-base">{item.description || 'No description provided by the seller.'}</div>
+          </div>
+
+          <div className="pt-4 mt-auto space-y-5 border-t border-gray-50">
+            
+            {/* Seller Rating */}
+            <div className="bg-gray-50 rounded-2xl p-1 border border-gray-100">
+               <ReviewSeller sellerId={item.seller_id} />
             </div>
 
-            <h1 className="text-2xl md:text-3xl lg:text-4xl font-extrabold text-gray-900 leading-tight mb-2">{item.title}</h1>
-            <p className="text-3xl md:text-4xl font-extrabold text-emerald-600 mt-2">Ksh {item.price.toLocaleString()}</p>
-          </div>
-
-          <div className="flex items-center gap-3 text-gray-700 bg-gray-50 px-4 py-3 rounded-xl border border-gray-100 mb-6">
-            <MapPin className="h-5 w-5 text-gray-400" />
-            <span className="font-medium">{item.town}, {item.county}</span>
-          </div>
-
-          <div className="prose prose-sm text-gray-700 leading-relaxed whitespace-pre-wrap mb-6">
-            <h3 className="text-sm font-bold uppercase tracking-wide">Description</h3>
-            <div className="mt-2">{item.description || 'No description provided by the seller.'}</div>
-          </div>
-
-          <div className="pt-4 mt-auto space-y-4">
-            <div className="flex items-start gap-3 bg-blue-50 border border-blue-100 p-4 rounded-xl text-blue-800 text-sm">
-              <ShieldCheck className="h-5 w-5 shrink-0 text-blue-600" />
-              <p className="leading-snug">
-                <strong className="block mb-1 text-blue-900">Safety Tip</strong>
-                Never pay for an item in advance. Always meet the seller in a public, safe location to inspect the item first.
-              </p>
-            </div>
-
+            {/* Action Buttons */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <a
                 href={waLink}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full inline-flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#1DA851] text-white py-3 rounded-xl font-bold text-lg transition-shadow shadow-sm"
+                className="w-full inline-flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#1DA851] text-white py-3.5 rounded-xl font-bold text-base transition-all shadow-sm active:scale-95"
                 aria-label={`Message seller about ${item.title} on WhatsApp`}
               >
                 <MessageCircle className="h-5 w-5" aria-hidden="true" />
-                Message Seller on WhatsApp
+                WhatsApp Seller
               </a>
 
               <a
                 href={`tel:${formattedPhone}`}
-                className="w-full inline-flex items-center justify-center gap-2 bg-white border border-gray-200 text-gray-800 py-3 rounded-xl font-medium hover:bg-gray-50 transition-colors"
+                className="w-full inline-flex items-center justify-center gap-2 bg-white border-2 border-emerald-600 text-emerald-700 py-3.5 rounded-xl font-bold text-base hover:bg-emerald-50 transition-all active:scale-95"
                 aria-label={`Call seller at ${item.seller_phone}`}
               >
                 <Phone className="h-5 w-5" aria-hidden="true" />
                 Call Seller
               </a>
             </div>
-          </div>
 
-          <div className="mt-6">
-            <ReviewSeller sellerId={item.seller_id} />
+            {/* Safety Tip (Orange Theme) */}
+            <div className="flex items-start gap-3 bg-orange-50/80 border border-orange-200/60 p-4 rounded-xl text-orange-900 text-sm mt-4">
+              <ShieldAlert className="h-5 w-5 shrink-0 text-orange-600" />
+              <p className="leading-snug">
+                <strong className="block mb-0.5 font-bold text-orange-800">Stay Safe on LocalSoko</strong>
+                Never pay for an item in advance via M-Pesa. Always meet the seller in a busy, public location to inspect the item first.
+              </p>
+            </div>
+
           </div>
         </div>
       </div>
