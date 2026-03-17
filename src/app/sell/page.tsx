@@ -146,7 +146,7 @@ export default function SellItemPage() {
 
   return (
     <div className="max-w-2xl mx-auto py-8 px-4">
-      <div className="mb-8 bg-black rounded-2xl shadow-lg">
+      <div className="mb-8 bg-black p-6 rounded-2xl shadow-sm border border-gray-100">
         <h1 className="text-3xl font-bold text-white">Post an Item</h1>
         <p className="text-gray-200 mt-2">Fill in the details below. There is a Ksh 100 listing fee per item.</p>
       </div>
