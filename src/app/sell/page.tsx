@@ -120,7 +120,8 @@ export default function SellItemPage() {
             town,
             seller_phone: sellerPhone, 
             images: uploadedUrls, 
-            status: 'pending_payment'
+            status: 'active'
+            // status: 'pending_payment'
           }
         ])
         .select()
@@ -130,7 +131,8 @@ export default function SellItemPage() {
 
       toast.success("Item saved! Redirecting to payment...");
       setTimeout(() => {
-        router.push(`/pay/${newItem.id}`); 
+        // router.push(`/pay/${newItem.id}`); 
+        router.push(`/`);
       }, 1500);
 
     } catch (error) {
@@ -333,7 +335,8 @@ export default function SellItemPage() {
           type="submit" disabled={isSubmitting}
           className="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:ring-2 focus:ring-green-500 disabled:opacity-70 transition-all"
         >
-          {isSubmitting ? "Uploading Photos & Saving..." : "Continue to Payment (Ksh 100)"}
+          {/* {isSubmitting ? "Uploading Photos & Saving..." : "Continue to Payment (Ksh 100)"} */}
+          {isSubmitting ? "Uploading Photos & Saving..." : "Post Item (Free!)"}
         </button>
 
       </form>
