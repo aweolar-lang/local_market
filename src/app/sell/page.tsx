@@ -145,7 +145,7 @@ export default function SellItemPage() {
   if (!user) return <div className="p-8 text-center text-gray-400">Checking authentication...</div>;
 
   return (
-    <div className="max-w-2xl mx-auto py-8 px-4">
+    <div className="max-w-2xl mx-auto py-8 px-4 bg-gray-900 rounded-2xl shadow-lg">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-white">Post an Item</h1>
         <p className="text-gray-200 mt-2">Fill in the details below. There is a Ksh 100 listing fee per item.</p>
