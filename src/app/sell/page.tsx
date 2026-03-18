@@ -256,21 +256,21 @@ export default function SellItemPage() {
   </label>
   <textarea 
     required 
-    rows={3} 
+    rows={4} 
     value={description} 
     onChange={(e) => {
-      if (e.target.value.length <= 300) {
+      if (e.target.value.length <= 600) {
         setDescription(e.target.value);
       }
     }}
-    maxLength={300}
+    maxLength={600}
     placeholder="Describe the condition, features..." 
     className="w-full px-4 py-3 border border-gray-200 text-black rounded-xl focus:ring-2 focus:ring-green-500 outline-none resize-none"
   />
   <div className="flex justify-between mt-1">
     <p className="text-xs text-gray-500">Briefly describe what you're selling.</p>
-    <p className={`text-xs ${description.length >= 300 ? 'text-red-500 font-bold' : 'text-gray-400'}`}>
-      {description.length}/300
+    <p className={`text-xs ${description.length >= 600 ? 'text-red-500 font-bold' : 'text-gray-400'}`}>
+      {description.length}/600
     </p>
   </div>
 </div>
