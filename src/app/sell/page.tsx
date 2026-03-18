@@ -166,19 +166,18 @@ export default function SellItemPage() {
     required 
     value={title} 
     onChange={(e) => {
-      // Only update state if the new value is 20 characters or fewer
-      if (e.target.value.length <= 20) {
+      if (e.target.value.length <= 40) {
         setTitle(e.target.value);
       }
     }}
-    maxLength={20}
+    maxLength={40}
     placeholder="e.g., Used Samsung S22" 
     className="w-full px-4 py-3 border border-gray-200 text-black rounded-xl focus:ring-2 focus:ring-green-500 outline-none"
   />
   <div className="flex justify-between mt-1">
     <p className="text-xs text-gray-500">Keep it short and catchy.</p>
-    <p className={`text-xs ${title.length >= 20 ? 'text-red-500 font-bold' : 'text-gray-400'}`}>
-      {title.length}/20
+    <p className={`text-xs ${title.length >= 40 ? 'text-red-500 font-bold' : 'text-gray-400'}`}>
+      {title.length}/40
     </p>
   </div>
 </div>
@@ -305,19 +304,18 @@ export default function SellItemPage() {
     required 
     value={town} 
     onChange={(e) => {
-      // Strict enforcement: Only update if length is 20 or less
-      if (e.target.value.length <= 30) {
+      if (e.target.value.length <= 50) {
         setTown(e.target.value);
       }
     }}
-    maxLength={30}
+    maxLength={50}
     placeholder="e.g., Westlands" 
     className="w-full px-4 py-3 border border-gray-200 text-black rounded-xl focus:ring-2 focus:ring-green-500 outline-none"
   />
   <div className="flex justify-between mt-1">
     <p className="text-xs text-gray-500">Specify your location.</p>
-    <p className={`text-xs ${town.length >= 30 ? 'text-red-500 font-bold' : 'text-gray-400'}`}>
-      {town.length}/30
+    <p className={`text-xs ${town.length >= 50 ? 'text-red-500 font-bold' : 'text-gray-400'}`}>
+      {town.length}/50
     </p>
   </div>
             </div>
@@ -335,13 +333,13 @@ export default function SellItemPage() {
     value={sellerPhone} 
     onChange={(e) => {
       const onlyDigits = e.target.value.replace(/\D/g, ""); 
-      if (onlyDigits.length <= 13) {
+      if (onlyDigits.length <= 12) {
         setSellerPhone(onlyDigits);
       }
     }}
     minLength={10}
-    maxLength={13}
-    pattern="[0-9]{10,13}"
+    maxLength={12}
+    pattern="[0-9]{10,12}"
     placeholder="e.g., 254712345678" 
     className="w-full px-4 py-3 border border-gray-200 text-black rounded-xl focus:ring-2 focus:ring-green-500 outline-none invalid:focus:ring-red-500"
   />
