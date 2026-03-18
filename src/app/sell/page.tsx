@@ -320,7 +320,6 @@ export default function SellItemPage() {
       {town.length}/30
     </p>
   </div>
-</div>
 
         {/* WhatsApp Number Input */}
         <div>
