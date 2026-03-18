@@ -265,11 +265,24 @@ export default function SellItemPage() {
           <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
             <Phone className="h-4 w-4 text-green-500" /> WhatsApp Number
           </label>
+
           <input 
-            type="tel" required value={sellerPhone} onChange={(e) => setSellerPhone(e.target.value)}
-            placeholder="e.g., 254712345678" 
-            className="w-full px-4 py-3 border border-gray-200 text-black rounded-xl focus:ring-2 focus:ring-green-500 outline-none"
-          />
+    type="tel" 
+    required 
+    value={sellerPhone} 
+    onChange={(e) => {
+      const onlyDigits = e.target.value.replace(/\D/g, ""); 
+      if (onlyDigits.length <= 13) {
+        setSellerPhone(onlyDigits);
+      }
+    }}
+    minLength={10}
+    maxLength={13}
+    pattern="[0-9]{10,13}"
+    placeholder="e.g., 254712345678" 
+    className="w-full px-4 py-3 border border-gray-200 text-black rounded-xl focus:ring-2 focus:ring-green-500 outline-none invalid:focus:ring-red-500"
+  />
+          
           <p className="text-xs text-gray-500 mt-1">Include country code. Buyers will use this to contact you.</p>
         </div>
 
