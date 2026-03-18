@@ -190,11 +190,30 @@ export default function SellItemPage() {
             <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
               <DollarSign className="h-4 w-4 text-green-500" /> Price (Ksh)
             </label>
+
             <input 
-              type="number" required min="1" value={price} onChange={(e) => setPrice(e.target.value)}
-              placeholder="e.g., 75000" 
-              className="w-full px-4 py-3 border text-black border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none"
-            />
+    type="number" 
+    required 
+    min="1" 
+    max="5000000"
+    value={price} 
+    onChange={(e) => {
+      const val = e.target.value;
+    
+      if (val === "") {
+        setPrice("");
+        return;
+      }
+
+      const numValue = Number(val);
+      if (numValue <= 5000000) {
+        setPrice(val);
+      }
+    }}
+    placeholder="e.g., 75000" 
+    className="w-full px-4 py-3 border text-black border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none invalid:focus:ring-red-500"
+  />
+            
           </div>
           <div>
             <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
