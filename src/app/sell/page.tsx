@@ -158,15 +158,30 @@ export default function SellItemPage() {
         {/* Title & Condition Row */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-              <Tag className="h-4 w-4 text-green-500" /> Item Title
-            </label>
-            <input 
-              type="text" required value={title} onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g., Used Samsung S22" 
-              className="w-full px-4 py-3 border border-gray-200 text-black rounded-xl focus:ring-2 focus:ring-green-500 outline-none"
-            />
-          </div>
+  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+    <Tag className="h-4 w-4 text-green-500" /> Item Title
+  </label>
+  <input 
+    type="text" 
+    required 
+    value={title} 
+    onChange={(e) => {
+      // Only update state if the new value is 20 characters or fewer
+      if (e.target.value.length <= 20) {
+        setTitle(e.target.value);
+      }
+    }}
+    maxLength={20}
+    placeholder="e.g., Used Samsung S22" 
+    className="w-full px-4 py-3 border border-gray-200 text-black rounded-xl focus:ring-2 focus:ring-green-500 outline-none"
+  />
+  <div className="flex justify-between mt-1">
+    <p className="text-xs text-gray-500">Keep it short and catchy.</p>
+    <p className={`text-xs ${title.length >= 20 ? 'text-red-500 font-bold' : 'text-gray-400'}`}>
+      {title.length}/20
+    </p>
+  </div>
+</div>
           <div>
             <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
               <Sparkles className="h-4 w-4 text-green-500" /> Condition
@@ -237,15 +252,29 @@ export default function SellItemPage() {
 
         {/* Description Input */}
         <div>
-          <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-            <AlignLeft className="h-4 w-4 text-green-500" /> Description
-          </label>
-          <textarea 
-            required rows={3} value={description} onChange={(e) => setDescription(e.target.value)}
-            placeholder="Describe the condition, features..." 
-            className="w-full px-4 py-3 border border-gray-200 text-black rounded-xl focus:ring-2 focus:ring-green-500 outline-none resize-none"
-          />
-        </div>
+  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+    <AlignLeft className="h-4 w-4 text-green-500" /> Description
+  </label>
+  <textarea 
+    required 
+    rows={3} 
+    value={description} 
+    onChange={(e) => {
+      if (e.target.value.length <= 300) {
+        setDescription(e.target.value);
+      }
+    }}
+    maxLength={300}
+    placeholder="Describe the condition, features..." 
+    className="w-full px-4 py-3 border border-gray-200 text-black rounded-xl focus:ring-2 focus:ring-green-500 outline-none resize-none"
+  />
+  <div className="flex justify-between mt-1">
+    <p className="text-xs text-gray-500">Briefly describe what you're selling.</p>
+    <p className={`text-xs ${description.length >= 300 ? 'text-red-500 font-bold' : 'text-gray-400'}`}>
+      {description.length}/300
+    </p>
+  </div>
+</div>
 
         {/* Location Row */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -268,16 +297,30 @@ export default function SellItemPage() {
             </select>
           </div>
           <div>
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-              <MapPin className="h-4 w-4 text-green-500" /> Town / Area
-            </label>
-            <input 
-              type="text" required value={town} onChange={(e) => setTown(e.target.value)}
-              placeholder="e.g., Westlands" 
-              className="w-full px-4 py-3 border border-gray-200 text-black rounded-xl focus:ring-2 focus:ring-green-500 outline-none"
-            />
-          </div>
-        </div>
+  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+    <MapPin className="h-4 w-4 text-green-500" /> Town / Area
+  </label>
+  <input 
+    type="text" 
+    required 
+    value={town} 
+    onChange={(e) => {
+      // Strict enforcement: Only update if length is 20 or less
+      if (e.target.value.length <= 30) {
+        setTown(e.target.value);
+      }
+    }}
+    maxLength={30}
+    placeholder="e.g., Westlands" 
+    className="w-full px-4 py-3 border border-gray-200 text-black rounded-xl focus:ring-2 focus:ring-green-500 outline-none"
+  />
+  <div className="flex justify-between mt-1">
+    <p className="text-xs text-gray-500">Specify your location.</p>
+    <p className={`text-xs ${town.length >= 30 ? 'text-red-500 font-bold' : 'text-gray-400'}`}>
+      {town.length}/30
+    </p>
+  </div>
+</div>
 
         {/* WhatsApp Number Input */}
         <div>
