@@ -18,7 +18,7 @@ const CATEGORIES = [
   { name: "Furniture", icon: Sofa },
   { name: "Fashion", icon: Shirt },
   { name: "Services", icon: Briefcase },
-  { name: "Other", icon: PackageOpen },
+  { name: "Others", icon: PackageOpen },
 ];
 
 const HERO_SLIDES = [
