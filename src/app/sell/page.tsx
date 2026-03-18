@@ -321,6 +321,7 @@ export default function SellItemPage() {
     </p>
   </div>
             </div>
+          </div>
 
         {/* WhatsApp Number Input */}
         <div>
