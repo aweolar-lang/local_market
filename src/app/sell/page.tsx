@@ -19,7 +19,7 @@ const KENYAN_COUNTIES = [
 
 
 const CATEGORIES = [
-  "Electronics", "Vehicles", "Furniture", "Fashion", "Services", "Other"
+  "Electronics", "Vehicles", "Furniture", "Fashion", "Services", "Others"
 ];
 
 export default function SellItemPage() {
