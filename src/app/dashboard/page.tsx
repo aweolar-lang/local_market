@@ -18,34 +18,46 @@ interface Item {
   slug: string;
 }
 
+interface UserProfile {
+  is_affiliate: boolean;
+  referral_code: string | null;
+  wallet_balance: number;
+}
+
 export default function DashboardPage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [copyText, setCopyText] = useState("Copy Link");
 
   // 1. Authenticate & Fetch User's Items
   useEffect(() => {
     const fetchUserAndItems = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      
       if (!session) {
         router.push("/login");
         return;
       }
-      
       setUser(session.user);
 
-      // Fetch ONLY items belonging to this specific user
-      const { data, error } = await supabase
+      // Fetch the items
+      const { data: itemsData } = await supabase
         .from("items")
         .select("*")
         .eq("seller_id", session.user.id)
         .order("created_at", { ascending: false });
+      if (itemsData) setItems(itemsData as Item[]);
 
-      if (!error && data) {
-        setItems(data as Item[]);
-      }
+      // Fetch the user's profile for the affiliate data
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("is_affiliate, referral_code, wallet_balance")
+        .eq("id", session.user.id)
+        .single();
+      if (profileData) setProfile(profileData);
+
       setLoading(false);
     };
 
@@ -94,8 +106,81 @@ export default function DashboardPage() {
     );
   }
 
+const handleActivateAffiliate = async () => {
+  // Ask the user for their M-Pesa number
+  const phone = window.prompt("Enter your M-Pesa number (e.g., 0712345678):");
+  if (!phone) return;
+
+  alert("Sending M-Pesa prompt to your phone...");
+
+  try {
+    const res = await fetch("/api/mpesa/stk", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ 
+        phoneNumber: phone, 
+        userId: user?.id
+      }),
+    });
+
+    const data = await res.json();
+    if (data.success) {
+      alert("Check your phone! Enter your PIN to activate.");
+    } else {
+      alert("Failed to send prompt: " + data.error);
+    }
+  } catch (err) {
+    alert("Something went wrong.");
+  }
+};
+
   return (
     <div className="max-w-4xl mx-auto space-y-8 pb-10">
+      {/* Affiliate & Wallet Section */}
+      {profile && (
+        <div className="mb-8">
+          {profile.is_affiliate ? (
+            // The Affiliate Wallet View
+            <div className="bg-black text-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-800 flex flex-col md:flex-row justify-between items-center gap-6">
+              <div>
+                <p className="text-gray-400 text-sm mb-1">Available Balance</p>
+                <h2 className="text-3xl font-bold text-green-400">Ksh {profile.wallet_balance.toLocaleString()}</h2>
+              </div>
+              
+              <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                <button 
+                  onClick={() => {
+                    navigator.clipboard.writeText(`https://yoursite.com/login?ref=${profile.referral_code}`);
+                    setCopyText("Copied!");
+                    setTimeout(() => setCopyText("Copy Link"), 2000);
+                  }}
+                  className="px-5 py-2.5 bg-gray-800 hover:bg-gray-700 rounded-xl font-medium transition-all text-sm border border-gray-700 flex items-center justify-center gap-2"
+                >
+                  {copyText}
+                </button>
+                <button className="bg-green-600 hover:bg-green-700 text-white px-5 py-2.5 rounded-xl font-medium transition-all shadow-sm text-sm">
+                  Withdraw to M-Pesa
+                </button>
+              </div>
+            </div>
+          ) : (
+            // The Upsell Promo View (If they haven't paid the 400 bob yet)
+            <div className="bg-green-50 p-6 md:p-8 rounded-2xl shadow-sm border border-green-200 flex flex-col md:flex-row justify-between items-center gap-6">
+              <div>
+                <h2 className="text-xl font-bold text-green-900">Want to earn passive income?</h2>
+                <p className="text-green-700 text-sm mt-1">Join the Affiliate Program for Ksh 400 and earn up to Ksh 150 for every friend you invite to LocalSoko.</p>
+              </div>
+              <button 
+                // We will link this to the M-Pesa payment route later!
+                onClick={handleActivateAffiliate}
+                className="w-full md:w-auto bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-sm shrink-0 whitespace-nowrap"
+              >
+                Activate for Ksh 400
+              </button>
+            </div>
+          )}
+        </div>
+      )}
       
       {/* Dashboard Header */}
       <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100 flex justify-between items-center">
