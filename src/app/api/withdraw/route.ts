@@ -1,5 +1,11 @@
 import { NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@supabase/supabase-js"; // Import the direct client
+
+// Initialize the Admin Client to bypass Row Level Security (RLS)
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY! // The secret admin key you just added
+);
 
 export async function POST(req: Request) {
   try {
@@ -8,23 +14,29 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, error: "Missing required fields" }, { status: 400 });
     }
 
-  
     if (amount < 150) {
       return NextResponse.json({ success: false, error: "Minimum withdrawal is Ksh 150" }, { status: 400 });
     }
 
-    const { data: profile, error: profileError } = await supabase
+    // 1. FETCH PROFILE (Now using Admin Client to bypass RLS!)
+    const { data: profile, error: profileError } = await supabaseAdmin
       .from('profiles')
       .select('phone_number') 
       .eq('id', userId)
       .single();
 
     if (profileError || !profile?.phone_number) {
+      console.error("Profile Fetch Error:", profileError);
       return NextResponse.json({ success: false, error: "No registered phone number found on your account. Please update your profile." }, { status: 400 });
     }
 
-    const targetPhone = profile.phone_number.startsWith('0') ? `254${profile.phone_number.slice(1)}` : profile.phone_number;
-    const { data: ledgerEntries } = await supabase
+    // Bulletproof phone formatting for Safaricom (Must be 2547...)
+    let targetPhone = profile.phone_number.trim();
+    if (targetPhone.startsWith('+')) targetPhone = targetPhone.slice(1);
+    if (targetPhone.startsWith('0')) targetPhone = `254${targetPhone.slice(1)}`;
+
+    // 2. FETCH LEDGER BALANCE (Using Admin Client)
+    const { data: ledgerEntries } = await supabaseAdmin
       .from('transactions')
       .select('amount')
       .eq('user_id', userId);
@@ -35,8 +47,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, error: `Insufficient funds. Your true balance is Ksh ${trueBalance}` }, { status: 400 });
     }
 
-    // 2. DEDUCT FROM LEDGER
-    const { data: transactionData, error: insertTxnError } = await supabase
+    // 3. DEDUCT FROM LEDGER (Using Admin Client)
+    const { data: transactionData, error: insertTxnError } = await supabaseAdmin
       .from('transactions')
       .insert({
         user_id: userId,
@@ -49,8 +61,8 @@ export async function POST(req: Request) {
 
     if (insertTxnError) throw insertTxnError;
 
-    // 3. QUEUE THE PAYOUT as 'processing'
-    const { error: withdrawError } = await supabase
+    // 4. QUEUE THE PAYOUT (Using Admin Client)
+    const { error: withdrawError } = await supabaseAdmin
       .from('withdrawals2')
       .insert({
         user_id: userId,
@@ -62,7 +74,9 @@ export async function POST(req: Request) {
 
     if (withdrawError) throw withdrawError;
 
-
+    // ----------------------------------------------------
+    // SAFARICOM M-PESA B2C LOGIC
+    // ----------------------------------------------------
     const consumerKey = process.env.MPESA_B2C_CONSUMER_KEY!;
     const consumerSecret = process.env.MPESA_B2C_CONSUMER_SECRET!;
     const auth = Buffer.from(`${consumerKey}:${consumerSecret}`).toString("base64");
@@ -72,7 +86,6 @@ export async function POST(req: Request) {
     });
     const { access_token } = await tokenResponse.json();
 
-    // Safaricom B2C API Request
     const b2cResponse = await fetch("https://sandbox.safaricom.co.ke/mpesa/b2c/v1/paymentrequest", {
       method: "POST",
       headers: {
@@ -95,8 +108,8 @@ export async function POST(req: Request) {
 
     const b2cData = await b2cResponse.json();
 
-
-    await supabase.from('profiles').update({ wallet_balance: trueBalance - amount }).eq('id', userId);
+    // 5. UPDATE WALLET BALANCE (Using Admin Client)
+    await supabaseAdmin.from('profiles').update({ wallet_balance: trueBalance - amount }).eq('id', userId);
 
     return NextResponse.json({ 
       success: true, 
