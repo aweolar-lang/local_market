@@ -54,7 +54,7 @@ function AuthForm() {
       if (error) {
         setMessage({ type: 'error', text: error.message });
       } else {
-        window.location.href = "/sell"; // Or wherever your dashboard is
+        window.location.href = "/dashboard";
       }
     }
     
@@ -79,14 +79,15 @@ function AuthForm() {
             <div>
               <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
                 <UserIcon className="h-4 w-4 text-black" />
-                Full Name
+                First Name
               </label>
               <input 
                 type="text" 
                 required={isSignUp}
                 value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                placeholder="John Doe" 
+                onChange={(e) => setFullName(e.target.value.replace(/\s+/g, ''))}
+                placeholder="John"
+                maxLength={10}
                 className="w-full px-4 py-3 border border-gray-600 rounded-xl focus:ring-2 focus:ring-green-500 outline-none"
               />
             </div>
@@ -100,6 +101,7 @@ function AuthForm() {
                 required={isSignUp}
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
+                maxLength={13}
                 placeholder="0712345678" 
                 className="w-full px-4 py-3 border border-gray-600 rounded-xl focus:ring-2 focus:ring-green-500 outline-none"
               />

@@ -4,14 +4,15 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
-import { ArrowLeft, Copy, Check, TrendingUp, Users, Award, Smartphone, Loader2, Lock, Crown, Star, ShieldCheck, Zap } from "lucide-react";
+import { ArrowLeft, Copy, Check, TrendingUp, Users, Award, Smartphone, Loader2, Lock, Crown, Star, ShieldCheck, Zap, ShieldAlert } from "lucide-react";
 
 interface AffiliateStats {
-  full_name: string;
+  username: string;
   referral_code: string;
   wallet_balance: number;
   total_invites: number;
   is_founder: boolean;
+  is_admin?: boolean; 
 }
 
 export default function AffiliatePage() {
@@ -39,7 +40,7 @@ export default function AffiliatePage() {
 
       const { data: profile } = await supabase
         .from("profiles")
-        .select("full_name, is_affiliate, referral_code, wallet_balance, is_founder")
+        .select("username,is_admin, is_affiliate, referral_code, wallet_balance, is_founder")
         .eq("id", session.user.id)
         .single();
 
@@ -52,11 +53,12 @@ export default function AffiliatePage() {
           .eq("referred_by", session.user.id);
 
         setStats({
-          full_name: profile.full_name || "Partner",
+          username: profile.username || "Partner",
           referral_code: profile.referral_code || "LOCKED",
           wallet_balance: profile.wallet_balance || 0,
           total_invites: count || 0,
           is_founder: profile.is_founder || false,
+          is_admin: profile.is_admin || false,
         });
       }
       setLoading(false);
@@ -114,17 +116,26 @@ export default function AffiliatePage() {
       
       {/* PROFESSIONAL TOP NAV */}
       <div className="bg-white border-b border-gray-200 sticky top-0 z-20 shadow-sm">
+        {stats?.is_admin && (
+        <Link 
+          href="/admin" 
+          className="mt-6 flex items-center justify-center gap-2 bg-gray-900 hover:bg-black border border-gray-700 text-emerald-400 py-3 px-4 rounded-xl font-black uppercase tracking-widest transition-all shadow-lg"
+        >
+        <ShieldAlert className="w-5 h-5" />
+        Access Founder HQ
+        </Link>
+      )}
         <div className="max-w-6xl mx-auto px-4 h-16 flex justify-between items-center">
           <Link href="/dashboard" className="flex items-center gap-2 text-gray-600 hover:text-black font-semibold transition-colors text-sm bg-gray-50 px-4 py-2 rounded-lg border border-gray-100">
-            <ArrowLeft className="h-4 w-4" /> Back to Dashboard
+             Back to Dashboard
           </Link>
           <div className="flex items-center gap-4">
             <div className="hidden md:block text-right">
               <p className="text-xs text-gray-500 font-medium">Logged in as</p>
-              <p className="text-sm font-bold text-gray-900">{stats?.full_name}</p>
+              <p className="text-sm font-bold text-gray-900">{stats?.username}</p>
             </div>
             <div className="h-10 w-10 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center text-white font-bold shadow-md">
-              {stats?.full_name.charAt(0).toUpperCase()}
+              {stats?.username.charAt(0).toUpperCase()}
             </div>
           </div>
         </div>
@@ -209,7 +220,7 @@ export default function AffiliatePage() {
                       <input 
                         type="tel" required placeholder="M-Pesa Number (e.g. 07...)"
                         value={phoneInput} onChange={(e) => setPhoneInput(e.target.value)}
-                        className="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-green-500 outline-none transition-all"
+                        className="w-full px-5 py-4 bg-gray-50 border border-gray-700 rounded-xl text-sm font-medium focus:ring-2 focus:ring-green-500 outline-none transition-all"
                       />
                     </div>
                     {paymentStatus === 'error' && <p className="text-red-500 text-xs font-bold">{paymentMessage}</p>}

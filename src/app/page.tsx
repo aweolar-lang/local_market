@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { 
   MapPin, Search, PackageOpen, Grid, Smartphone, Car, Sofa, Shirt, Briefcase, MessageCircle, Phone, X, Zap, Crown
@@ -380,16 +379,14 @@ export default function Home() {
                     </span>
                   )}
                 </div>
-                {item.images?.[0] && (
-                 <Image
+                 {item.images?.[0] && (
+                  <img
                   src={item.images[0]}
                   alt={item.title}
-                  fill
-                  sizes="(max-width: 640px) 100vw, 33vw"
-                  className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
-                  unoptimized
+                  className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+                  loading="lazy"
                   />
-                )}
+              )}
               </Link>
               <div className="p-4 flex flex-col grow">
                 <div className="flex-1 min-w-0 mb-1">

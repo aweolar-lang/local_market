@@ -1,7 +1,6 @@
-"use client"; // <-- This tells Next.js this part needs to be interactive in the browser
+"use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface ImageGalleryProps {
@@ -32,15 +31,14 @@ export default function ImageGallery({ images }: ImageGalleryProps) {
     <div className="space-y-4">
       {/* Main Big Image */}
       <div className="relative h-96 md:h-125 w-full bg-gray-100 rounded-2xl overflow-hidden group">
-        <Image
+        <img
           src={images[currentIndex]}
           alt={`Item image ${currentIndex + 1}`}
-          fill
-          className="object-contain"
-          priority // Load the first image instantly
+          className="absolute inset-0 w-full h-full object-contain"
+          loading="eager" // main image loads immediately
         />
 
-        {/* Next & Prev Buttons (Only show if there is more than 1 image) */}
+        {/* Next & Prev Buttons */}
         {images.length > 1 && (
           <>
             <button
@@ -57,8 +55,8 @@ export default function ImageGallery({ images }: ImageGalleryProps) {
             </button>
           </>
         )}
-        
-        {/* Image Counter Badge */}
+
+        {/* Image Counter */}
         {images.length > 1 && (
           <div className="absolute bottom-4 right-4 bg-black/60 text-white text-xs font-bold px-3 py-1 rounded-full backdrop-blur-sm">
             {currentIndex + 1} / {images.length}
@@ -66,7 +64,7 @@ export default function ImageGallery({ images }: ImageGalleryProps) {
         )}
       </div>
 
-      {/* Thumbnails Row (Only show if there is more than 1 image) */}
+      {/* Thumbnails */}
       {images.length > 1 && (
         <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
           {images.map((img, index) => (
@@ -74,14 +72,16 @@ export default function ImageGallery({ images }: ImageGalleryProps) {
               key={index}
               onClick={() => setCurrentIndex(index)}
               className={`relative h-20 w-20 shrink-0 rounded-xl overflow-hidden border-2 transition-all ${
-                currentIndex === index ? "border-green-500 opacity-100" : "border-transparent opacity-60 hover:opacity-100"
+                currentIndex === index
+                  ? "border-green-500 opacity-100"
+                  : "border-transparent opacity-60 hover:opacity-100"
               }`}
             >
-              <Image 
-                src={img} 
-                alt={`Thumbnail ${index + 1}`} 
-                fill 
-                className="object-cover" 
+              <img
+                src={img}
+                alt={`Thumbnail ${index + 1}`}
+                className="absolute inset-0 w-full h-full object-cover"
+                loading="lazy"
               />
             </button>
           ))}
