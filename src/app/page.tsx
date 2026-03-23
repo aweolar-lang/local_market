@@ -380,11 +380,16 @@ export default function Home() {
                     </span>
                   )}
                 </div>
-                <Image 
-                  src={item.images?.[0] || ''} 
-                  alt={item.title} fill sizes="(max-width: 640px) 100vw, 33vw"
+                {item.images?.[0] && (
+                 <Image
+                  src={item.images[0]}
+                  alt={item.title}
+                  fill
+                  sizes="(max-width: 640px) 100vw, 33vw"
                   className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
-                />
+                  unoptimized
+                  />
+                )}
               </Link>
               <div className="p-4 flex flex-col grow">
                 <div className="flex-1 min-w-0 mb-1">
