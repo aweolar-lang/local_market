@@ -5,9 +5,8 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { 
   Users, DollarSign, Wallet, ArrowDownRight, 
-  Activity, Clock, Landmark, CheckCircle, ListOrdered, ShieldAlert
+  Activity, Clock, Landmark, CheckCircle, ListOrdered, UserCheck
 } from "lucide-react";
-import { toast } from "sonner"; // Assuming you have sonner for toasts, or just use alert()
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -17,6 +16,8 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState({
     totalUsers: 0,
     affiliates: 0,
+    directJoins: 0,
+    referredJoins: 0,
     grossRevenue: 0,
     usersUnclaimedMoney: 0,
     platformProfit: 0,
@@ -53,7 +54,11 @@ export default function AdminDashboard() {
     // 1. Fetch Profile Stats
     const { data: profiles } = await supabase.from('profiles').select('*');
     if (profiles) {
+      const totalUsers = profiles.length;
       const affiliates = profiles.filter(p => p.is_affiliate).length;
+      const referredJoins = profiles.filter(p => p.referred_by !== null).length;
+      const directJoins = totalUsers - referredJoins;
+
       const grossRevenue = affiliates * 400;
       const usersUnclaimedMoney = profiles
         .filter(p => !p.is_admin)
@@ -61,8 +66,10 @@ export default function AdminDashboard() {
       const platformProfit = grossRevenue - usersUnclaimedMoney - adminWallet;
 
       setStats({
-        totalUsers: profiles.length,
+        totalUsers,
         affiliates,
+        directJoins,
+        referredJoins,
         grossRevenue,
         usersUnclaimedMoney,
         platformProfit,
@@ -70,7 +77,7 @@ export default function AdminDashboard() {
       });
     }
 
-    // 2. Fetch Pending Withdrawals (Joining with profiles to get the username)
+    // 2. Fetch Pending Withdrawals
     const { data: withdrawals } = await supabase
       .from('withdrawals2')
       .select('*, profiles(username)')
@@ -79,7 +86,7 @@ export default function AdminDashboard() {
     
     if (withdrawals) setPendingWithdrawals(withdrawals);
 
-    // 3. Fetch Master Ledger Book (Last 50 transactions)
+    // 3. Fetch Master Ledger Book
     const { data: ledger } = await supabase
       .from('transactions')
       .select('*, profiles(username)')
@@ -108,7 +115,6 @@ export default function AdminDashboard() {
       if (error) throw error;
       
       alert("Successfully marked as paid!");
-      // Refresh the data to remove it from the queue
       const { data: { session } } = await supabase.auth.getSession();
       const { data: user } = await supabase.from('profiles').select('wallet_balance').eq('id', session?.user.id).single();
       fetchAllData(user?.wallet_balance || 0);
@@ -123,7 +129,7 @@ export default function AdminDashboard() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gray-950 text-white">
         <Activity className="h-10 w-10 text-emerald-500 animate-spin mb-4" />
-        <p className="font-bold tracking-widest text-gray-400">LOADING FINANCIALS...</p>
+        <p className="font-bold tracking-widest text-gray-400">LOADING FOUNDER HQ...</p>
       </div>
     );
   }
@@ -133,7 +139,7 @@ export default function AdminDashboard() {
   return (
     <div className="p-4 sm:p-8 space-y-8 max-w-7xl mx-auto">
       
-      {/* FINANCIAL SUMMARY CARDS (Same as before) */}
+      {/* 1. FINANCIAL SUMMARY CARDS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-gray-900 border border-gray-800 p-6 rounded-2xl shadow-lg relative overflow-hidden">
           <div className="flex items-center justify-between mb-4 relative z-10">
@@ -165,9 +171,43 @@ export default function AdminDashboard() {
         </div>
       </div>
 
+      {/* 2. MIDDLE ROW: GROWTH & ACTION QUEUE */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         
-        {/* ACTION CENTER: PENDING WITHDRAWALS */}
+        {/* NETWORK GROWTH */}
+        <div className="bg-gray-900 border border-gray-800 rounded-2xl shadow-lg overflow-hidden flex flex-col">
+          <div className="p-6 border-b border-gray-800 flex justify-between items-center">
+            <h2 className="text-lg font-bold text-white flex items-center gap-2">
+              <UserCheck className="h-5 w-5 text-purple-400" />
+              Network Growth
+            </h2>
+            <span className="bg-gray-800 text-gray-300 text-xs font-bold px-3 py-1 rounded-full border border-gray-700">
+              {stats.affiliates} Paid / {stats.totalUsers} Total
+            </span>
+          </div>
+          <div className="p-6 space-y-8 flex-1">
+            <div>
+              <div className="flex justify-between text-sm mb-2">
+                <span className="text-gray-400">Direct Signups (No Referrer)</span>
+                <span className="font-bold text-white">{stats.directJoins}</span>
+              </div>
+              <div className="w-full bg-gray-800 rounded-full h-2">
+                <div className="bg-gray-500 h-2 rounded-full" style={{ width: stats.totalUsers > 0 ? `${(stats.directJoins / stats.totalUsers) * 100}%` : '0%' }}></div>
+              </div>
+            </div>
+            <div>
+              <div className="flex justify-between text-sm mb-2">
+                <span className="text-gray-400">Referred Signups (Affiliate Tree)</span>
+                <span className="font-bold text-white">{stats.referredJoins}</span>
+              </div>
+              <div className="w-full bg-gray-800 rounded-full h-2">
+                <div className="bg-purple-500 h-2 rounded-full" style={{ width: stats.totalUsers > 0 ? `${(stats.referredJoins / stats.totalUsers) * 100}%` : '0%' }}></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ACTION QUEUE: PAYOUTS */}
         <div className="bg-gray-900 border border-orange-900/50 rounded-2xl shadow-lg overflow-hidden flex flex-col">
           <div className="p-6 border-b border-gray-800 flex justify-between items-center bg-orange-500/5">
             <h2 className="text-lg font-bold text-white flex items-center gap-2">
@@ -178,7 +218,7 @@ export default function AdminDashboard() {
               {pendingWithdrawals.length} Pending
             </span>
           </div>
-          <div className="flex-1 p-0 overflow-y-auto max-h-[500px]">
+          <div className="flex-1 p-0 overflow-y-auto max-h-[300px]">
             {pendingWithdrawals.length === 0 ? (
               <div className="p-10 flex flex-col items-center justify-center text-center">
                 <CheckCircle className="h-10 w-10 text-gray-700 mb-3" />
@@ -217,42 +257,53 @@ export default function AdminDashboard() {
             )}
           </div>
         </div>
-
-        {/* MASTER LEDGER BOOK */}
-        <div className="bg-gray-900 border border-gray-800 rounded-2xl shadow-lg overflow-hidden flex flex-col">
-          <div className="p-6 border-b border-gray-800 flex justify-between items-center">
-            <h2 className="text-lg font-bold text-white flex items-center gap-2">
-              <ListOrdered className="h-5 w-5 text-blue-400" />
-              Master Ledger Book
-            </h2>
-          </div>
-          <div className="flex-1 p-0 overflow-y-auto max-h-[500px]">
-            {ledgerEntries.length === 0 ? (
-              <div className="p-10 text-center text-gray-500">No transactions recorded yet.</div>
-            ) : (
-              <ul className="divide-y divide-gray-800">
-                {ledgerEntries.map((txn) => (
-                  <li key={txn.id} className="p-4 hover:bg-gray-800/30 transition-colors flex justify-between items-center gap-4">
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm text-gray-300 truncate">{txn.description}</p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="text-xs text-gray-500">{new Date(txn.created_at).toLocaleDateString()}</span>
-                        <span className="text-xs bg-gray-800 text-gray-400 px-2 py-0.5 rounded border border-gray-700">
-                          {txn.profiles?.username || "System"}
-                        </span>
-                      </div>
-                    </div>
-                    <div className={`shrink-0 font-bold text-right ${txn.amount > 0 ? 'text-emerald-400' : 'text-orange-400'}`}>
-                      {txn.amount > 0 ? '+' : ''}Ksh {Math.abs(txn.amount)}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </div>
-
       </div>
+
+      {/* 3. BOTTOM ROW: MASTER LEDGER BOOK (FULL WIDTH) */}
+      <div className="bg-gray-900 border border-gray-800 rounded-2xl shadow-lg overflow-hidden flex flex-col">
+        <div className="p-6 border-b border-gray-800 flex justify-between items-center">
+          <h2 className="text-lg font-bold text-white flex items-center gap-2">
+            <ListOrdered className="h-5 w-5 text-blue-400" />
+            Master Ledger Book
+          </h2>
+          <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Global Platform Activity</span>
+        </div>
+        <div className="p-0 overflow-y-auto max-h-[400px]">
+          {ledgerEntries.length === 0 ? (
+            <div className="p-10 text-center text-gray-500">No transactions recorded yet.</div>
+          ) : (
+            <table className="w-full text-left text-sm text-gray-400">
+              <thead className="bg-gray-800/50 text-xs uppercase text-gray-500 sticky top-0">
+                <tr>
+                  <th className="px-6 py-3 font-bold">Date & Time</th>
+                  <th className="px-6 py-3 font-bold">User</th>
+                  <th className="px-6 py-3 font-bold">Description</th>
+                  <th className="px-6 py-3 font-bold text-right">Amount</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-800">
+                {ledgerEntries.map((txn) => (
+                  <tr key={txn.id} className="hover:bg-gray-800/30 transition-colors">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {new Date(txn.created_at).toLocaleDateString()} <span className="text-gray-600 ml-1">{new Date(txn.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="bg-gray-800 text-gray-300 px-2 py-1 rounded-md border border-gray-700">
+                        {txn.profiles?.username || "System"}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-gray-300">{txn.description}</td>
+                    <td className={`px-6 py-4 whitespace-nowrap text-right font-black ${txn.amount > 0 ? 'text-emerald-400' : 'text-orange-400'}`}>
+                      {txn.amount > 0 ? '+' : ''}Ksh {Math.abs(txn.amount)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </div>
+
     </div>
   );
 }

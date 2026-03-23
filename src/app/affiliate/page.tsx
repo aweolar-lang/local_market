@@ -4,7 +4,11 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
-import { ArrowLeft, Copy, Check, TrendingUp, Users, Award, Smartphone, Loader2, Lock, Crown, Star, ShieldCheck, Zap, ShieldAlert } from "lucide-react";
+import { 
+  ArrowLeft, Copy, Check, TrendingUp, Users, Award, 
+  Smartphone, Loader2, Lock, Crown, Star, ShieldCheck, 
+  Zap, ShieldAlert, ArrowDownRight 
+} from "lucide-react";
 
 interface AffiliateStats {
   username: string;
@@ -25,15 +29,17 @@ export default function AffiliatePage() {
   const [copied, setCopied] = useState(false);
   const [siteUrl, setSiteUrl] = useState("");
 
+  // Payment & Withdrawal States
   const [phoneInput, setPhoneInput] = useState("");
   const [paymentStatus, setPaymentStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [paymentMessage, setPaymentMessage] = useState("");
+  
   const [withdrawAmount, setWithdrawAmount] = useState("");
   const [withdrawStatus, setWithdrawStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [withdrawMessage, setWithdrawMessage] = useState("");
 
-  const [withdrawPhone, setWithdrawPhone] = useState("");
- 
+  // Ledger State
+  const [transactions, setTransactions] = useState<any[]>([]);
 
   useEffect(() => {
     setSiteUrl(window.location.origin);
@@ -45,9 +51,10 @@ export default function AffiliatePage() {
       }
       setUserId(session.user.id);
 
+      // Fetch Profile Data
       const { data: profile } = await supabase
         .from("profiles")
-        .select("username,is_admin, is_affiliate, referral_code, wallet_balance, is_founder, phone_number")
+        .select("username, is_admin, is_affiliate, referral_code, wallet_balance, is_founder, phone_number")
         .eq("id", session.user.id)
         .single();
 
@@ -68,6 +75,16 @@ export default function AffiliatePage() {
           is_admin: profile.is_admin || false,
           phone_number: profile.phone_number || "No phone registered",
         });
+
+        // Fetch Ledger Transactions
+        const { data: txns } = await supabase
+          .from("transactions")
+          .select("*")
+          .eq("user_id", session.user.id)
+          .order("created_at", { ascending: false })
+          .limit(20);
+
+        if (txns) setTransactions(txns);
       }
       setLoading(false);
     };
@@ -100,7 +117,6 @@ export default function AffiliatePage() {
     }
   };
 
-
   const handleWithdrawal = async (e: React.FormEvent) => {
     e.preventDefault();
     setWithdrawStatus('loading');
@@ -113,7 +129,6 @@ export default function AffiliatePage() {
         body: JSON.stringify({ 
           userId: userId, 
           amount: Number(withdrawAmount), 
-          // Server safely handles the phone number now
         }),
       });
       const data = await res.json();
@@ -126,6 +141,16 @@ export default function AffiliatePage() {
           setStats({ ...stats, wallet_balance: stats.wallet_balance - Number(withdrawAmount) });
         }
         setWithdrawAmount("");
+        
+        // Refresh transactions to show the new withdrawal instantly
+        const { data: txns } = await supabase
+          .from("transactions")
+          .select("*")
+          .eq("user_id", userId)
+          .order("created_at", { ascending: false })
+          .limit(20);
+        if (txns) setTransactions(txns);
+
       } else {
         setWithdrawStatus('error');
         setWithdrawMessage(data.error);
@@ -135,7 +160,6 @@ export default function AffiliatePage() {
       setWithdrawMessage("Network error processing withdrawal.");
     }
   };
-  
 
   const copyToClipboard = () => {
     if (!stats || !isAffiliate) return;
@@ -162,17 +186,16 @@ export default function AffiliatePage() {
       {/* PROFESSIONAL TOP NAV */}
       <div className="bg-white border-b border-gray-200 sticky top-0 z-20 shadow-sm">
         {stats?.is_admin && (
-        <Link 
-          href="/admin" 
-          className="mt-6 flex items-center justify-center gap-2 bg-gray-900 hover:bg-black border border-gray-700 text-emerald-400 py-3 px-4 rounded-xl font-black uppercase tracking-widest transition-all shadow-lg"
-        >
-        <ShieldAlert className="w-5 h-5" />
-        Access Founder HQ
-        </Link>
-      )}
+          <Link 
+            href="/admin" 
+            className="flex items-center justify-center gap-2 bg-gray-900 hover:bg-black text-emerald-400 py-3 px-4 font-black uppercase tracking-widest transition-all"
+          >
+            <ShieldAlert className="w-5 h-5" /> Access Founder HQ
+          </Link>
+        )}
         <div className="max-w-6xl mx-auto px-4 h-16 flex justify-between items-center">
-          <Link href="/dashboard" className="flex items-center gap-2 text-gray-600 hover:text-black font-semibold transition-colors text-sm bg-gray-50 px-4 py-2 rounded-lg border border-gray-100">
-             Back to Dashboard
+          <Link href="/" className="flex items-center gap-2 text-gray-600 hover:text-black font-semibold transition-colors text-sm bg-gray-50 px-4 py-2 rounded-lg border border-gray-100">
+             <ArrowLeft className="h-4 w-4" /> Back to Marketplace
           </Link>
           <div className="flex items-center gap-4">
             <div className="hidden md:block text-right">
@@ -203,91 +226,137 @@ export default function AffiliatePage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
+          {/* LEFT COLUMN: MAIN ACTIONS */}
           <div className="lg:col-span-2 space-y-6">
             
-            <div className="bg-gray-900 rounded-3xl p-8 md:p-10 text-white relative overflow-hidden shadow-2xl border border-gray-800">
-              <div className="absolute top-0 right-0 p-10 opacity-5 pointer-events-none">
-                <TrendingUp className="w-64 h-64" />
-              </div>
-              <div className="relative z-10 space-y-6">
-                <div>
-                  <p className="text-gray-400 font-medium mb-2 tracking-wide uppercase text-sm">Total Earnings</p>
-                  <h1 className="text-5xl md:text-6xl font-black text-green-400 tracking-tight">
-                    <span className="text-3xl text-green-600 mr-2">Ksh</span>
-                    {stats?.wallet_balance.toLocaleString()}
-                  </h1>
-                </div>
-                {/* WITHDRAWAL CARD */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mt-6">
-        <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-          <Zap className="h-5 w-5 text-orange-500" />
-          Withdraw Earnings
-        </h3>
-        
-        <form onSubmit={handleWithdrawal} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Amount (Ksh)</label>
-              <input 
-                type="number" 
-                required 
-                min="100"
-                max={stats?.wallet_balance || 0}
-                value={withdrawAmount}
-                onChange={(e) => setWithdrawAmount(e.target.value)}
-                placeholder="e.g. 500"
-                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">M-Pesa Number</label>
-              <input 
-                type="text" 
-                required 
-                value={withdrawPhone}
-                onChange={(e) => setWithdrawPhone(e.target.value)}
-                placeholder="e.g. 0712345678"
-                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              />
-            </div>
-          </div>
-          
-          <button 
-            type="submit" 
-            disabled={withdrawStatus === 'loading' || !stats || stats.wallet_balance < 100}
-            className="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold py-3 rounded-xl transition-colors shadow-md"
-          >
-            {withdrawStatus === 'loading' ? 'Processing...' : 'Request Payout'}
-          </button>
-
-          {withdrawMessage && (
-            <p className={`text-sm font-bold text-center mt-2 ${withdrawStatus === 'success' ? 'text-green-600' : 'text-red-500'}`}>
-              {withdrawMessage}
-            </p>
-          )}
-        </form>
-      </div>
-              </div>
-            </div>
-
             {isAffiliate ? (
-              <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100">
-                <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center gap-3">
-                    <div className="p-3 bg-green-50 text-green-600 rounded-xl"><Users className="h-6 w-6" /></div>
-                    <h3 className="text-xl font-bold text-gray-900">Your Invite Link</h3>
+              <>
+                {/* 1. EARNINGS DISPLAY (Only for Affiliates) */}
+                <div className="bg-gray-900 rounded-3xl p-8 md:p-10 text-white relative overflow-hidden shadow-2xl border border-gray-800">
+                  <div className="absolute top-0 right-0 p-10 opacity-5 pointer-events-none">
+                    <TrendingUp className="w-64 h-64" />
                   </div>
-                  <div className="bg-gray-100 text-gray-600 px-3 py-1 rounded-lg text-xs font-bold uppercase">Active</div>
+                  <div className="relative z-10">
+                    <p className="text-gray-400 font-medium mb-2 tracking-wide uppercase text-sm">Total Earnings</p>
+                    <h1 className="text-5xl md:text-6xl font-black text-green-400 tracking-tight">
+                      <span className="text-3xl text-green-600 mr-2">Ksh</span>
+                      {stats?.wallet_balance.toLocaleString()}
+                    </h1>
+                  </div>
                 </div>
-                <p className="text-gray-500 text-sm mb-6">Share this link. Earn commissions passively when your friends join and invite others.</p>
-                <div className="flex bg-gray-50 border border-gray-200 rounded-xl p-2 shadow-inner">
-                  <input readOnly value={`${siteUrl}/login?ref=${stats?.referral_code}`} className="bg-transparent flex-1 px-4 text-sm outline-none font-medium text-gray-700" />
-                  <button onClick={copyToClipboard} className="bg-black hover:bg-gray-800 text-white px-6 py-3 rounded-lg text-sm font-bold flex items-center gap-2 transition-colors">
-                    {copied ? <><Check className="h-4 w-4"/> Copied!</> : <><Copy className="h-4 w-4"/> Copy Link</>}
-                  </button>
+
+                {/* 2. WITHDRAWAL CARD */}
+                <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 md:p-8">
+                  <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
+                    <Zap className="h-5 w-5 text-orange-500" />
+                    Withdraw Earnings
+                  </h3>
+                  
+                  <form onSubmit={handleWithdrawal} className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Amount (Ksh)</label>
+                        <input 
+                          type="number" 
+                          required 
+                          min="150"
+                          max={stats?.wallet_balance || 0}
+                          value={withdrawAmount}
+                          onChange={(e) => setWithdrawAmount(e.target.value)}
+                          placeholder="Min. Ksh 150"
+                          className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-4 focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 flex justify-between">
+                          <span>Locked Destination</span>
+                          <Lock className="h-3 w-3 text-emerald-500" />
+                        </label>
+                        <div className="w-full bg-gray-100 border border-gray-200 text-gray-500 font-medium rounded-xl px-4 py-4 cursor-not-allowed flex items-center gap-2">
+                          <Smartphone className="h-4 w-4 text-gray-400" />
+                          {stats?.phone_number}
+                        </div>
+                        <p className="text-[10px] text-gray-400 mt-2">Funds can only be sent to your registered number for security.</p>
+                      </div>
+                    </div>
+                    
+                    <button 
+                      type="submit" 
+                      disabled={withdrawStatus === 'loading' || !stats || stats.wallet_balance < 150}
+                      className="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl transition-colors shadow-md text-lg"
+                    >
+                      {withdrawStatus === 'loading' ? 'Processing...' : 'Auto-Transfer to M-Pesa'}
+                    </button>
+
+                    {withdrawMessage && (
+                      <p className={`text-sm font-bold text-center mt-2 ${withdrawStatus === 'success' ? 'text-green-600' : 'text-red-500'}`}>
+                        {withdrawMessage}
+                      </p>
+                    )}
+                  </form>
                 </div>
-              </div>
+
+                {/* 3. INVITE LINK */}
+                <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100">
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-3">
+                      <div className="p-3 bg-green-50 text-green-600 rounded-xl"><Users className="h-6 w-6" /></div>
+                      <h3 className="text-xl font-bold text-gray-900">Your Invite Link</h3>
+                    </div>
+                    <div className="bg-gray-100 text-gray-600 px-3 py-1 rounded-lg text-xs font-bold uppercase">Active</div>
+                  </div>
+                  <p className="text-gray-500 text-sm mb-6">Share this link. Earn commissions passively when your friends join and invite others.</p>
+                  <div className="flex bg-gray-50 border border-gray-200 rounded-xl p-2 shadow-inner">
+                    <input readOnly value={`${siteUrl}/login?ref=${stats?.referral_code}`} className="bg-transparent flex-1 px-4 text-sm outline-none font-medium text-gray-700" />
+                    <button onClick={copyToClipboard} className="bg-black hover:bg-gray-800 text-white px-6 py-3 rounded-lg text-sm font-bold flex items-center gap-2 transition-colors">
+                      {copied ? <><Check className="h-4 w-4"/> Copied!</> : <><Copy className="h-4 w-4"/> Copy Link</>}
+                    </button>
+                  </div>
+                </div>
+
+                {/* 4. TRANSACTION LEDGER */}
+                <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+                  <div className="p-6 md:p-8 border-b border-gray-100 flex justify-between items-center">
+                    <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                      <TrendingUp className="h-5 w-5 text-blue-500" />
+                      Ledger History
+                    </h3>
+                    <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Last 20 records</span>
+                  </div>
+                  <div className="p-0 overflow-y-auto max-h-[400px]">
+                    {transactions.length === 0 ? (
+                      <div className="p-8 text-center text-gray-500 font-medium">
+                        No transactions yet. Start referring to earn!
+                      </div>
+                    ) : (
+                      <ul className="divide-y divide-gray-50">
+                        {transactions.map((txn) => (
+                          <li key={txn.id} className="p-4 md:p-6 hover:bg-gray-50 transition-colors flex justify-between items-center gap-4">
+                            <div className="min-w-0 flex-1 flex items-center gap-3">
+                              <div className={`p-3 rounded-xl ${txn.amount > 0 ? 'bg-emerald-100 text-emerald-600' : 'bg-orange-100 text-orange-600'}`}>
+                                {txn.amount > 0 ? <TrendingUp className="h-5 w-5" /> : <ArrowDownRight className="h-5 w-5" />}
+                              </div>
+                              <div>
+                                <p className="text-sm font-bold text-gray-900 truncate">
+                                  {txn.description}
+                                </p>
+                                <p className="text-xs text-gray-500 mt-1">
+                                  {new Date(txn.created_at).toLocaleDateString()}
+                                </p>
+                              </div>
+                            </div>
+                            <div className={`shrink-0 font-black text-lg text-right ${txn.amount > 0 ? 'text-emerald-500' : 'text-gray-900'}`}>
+                              {txn.amount > 0 ? '+' : ''}Ksh {Math.abs(txn.amount)}
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                </div>
+              </>
             ) : (
+              /* ACTIVATION PAYMENT (Only for Non-Affiliates) */
               <div className="bg-white p-6 md:p-8 rounded-3xl shadow-lg border-2 border-orange-200 relative overflow-hidden">
                 <div className="absolute top-0 right-0 bg-orange-500 text-white px-6 py-2 rounded-bl-2xl text-xs font-black tracking-wider flex items-center gap-2 shadow-md">
                   <Lock className="h-3 w-3" /> LINK LOCKED
@@ -320,6 +389,7 @@ export default function AffiliatePage() {
             )}
           </div>
 
+          {/* RIGHT COLUMN: PERKS & LEADERBOARDS */}
           <div className="space-y-6">
             
             {/* 1. Quick Stats Grid */}
