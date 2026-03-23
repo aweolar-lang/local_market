@@ -4,26 +4,23 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { User } from "@supabase/supabase-js"; // Strict typing for user
-import { Store, PlusCircle, LayoutDashboard, LogOut, LogIn } from "lucide-react";
+import { User } from "@supabase/supabase-js"; 
+import { Store, PlusCircle, LayoutDashboard, LogOut, LogIn, Crown } from "lucide-react";
 
 export default function Navbar() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    // 1. Check if the user is logged in on mount
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
     });
 
-    // 2. Listen for auth changes and update the UI
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
     });
 
     return () => {
-      // cleanup subscription
       try { subscription.unsubscribe(); } catch (e) { /* noop */ }
     };
   }, []);
@@ -38,15 +35,28 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16 items-center">
 
-          {/* Left: Logo */}
-          <Link href="/" aria-label="Go to LocalSoko home" className="flex items-center gap-2 text-emerald-600 hover:text-emerald-700 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-200 rounded">
-            <Store className="h-6 w-6" aria-hidden="true" />
-            <span className="font-bold text-xl tracking-tight text-gray-900">LocalSoko</span>
-          </Link>
+          {/* Left: Logo & Affiliate Link */}
+          <div className="flex items-center gap-4 sm:gap-6">
+            {/* Logo */}
+            <Link href="/" aria-label="Go to LocalSoko home" className="flex items-center gap-2 text-emerald-600 hover:text-emerald-700 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-200 rounded">
+              <Store className="h-6 w-6" aria-hidden="true" />
+              <span className="font-bold text-xl tracking-tight text-gray-900 hidden xs:block">LocalSoko</span>
+            </Link>
+
+            {/* NEW: VIP Partner Hub Link */}
+            <Link
+              href="/affiliate"
+              className="flex items-center gap-1.5 bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 hover:border-yellow-400 text-yellow-800 px-3 py-1.5 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-wider transition-all shadow-sm hover:shadow"
+            >
+              <Crown className="h-3.5 w-3.5 text-yellow-600" />
+              <span className="hidden sm:inline">Partner Hub</span>
+              <span className="sm:hidden">Earn</span>
+            </Link>
+          </div>
 
           {/* Right: Actions */}
           <div className="flex items-center gap-3">
-            {/* Post Ad (prominent on desktop, icon on mobile) */}
+            {/* Post Ad */}
             <Link
               href="/sell"
               className="hidden sm:inline-flex items-center gap-1.5 text-sm font-medium bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-300"
@@ -67,7 +77,7 @@ export default function Navbar() {
 
             {/* Dynamic Auth area */}
             {user ? (
-              <div className="flex items-center gap-3 border-l border-gray-200 pl-4 ml-2">
+              <div className="flex items-center gap-3 border-l border-gray-200 pl-4 ml-1 sm:ml-2">
                 <Link
                   href="/dashboard"
                   className="flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-emerald-600 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-200 rounded"
@@ -88,14 +98,14 @@ export default function Navbar() {
                 </button>
               </div>
             ) : (
-              <div className="flex items-center gap-3 border-l border-gray-200 pl-4 ml-2">
+              <div className="flex items-center gap-3 border-l border-gray-200 pl-4 ml-1 sm:ml-2">
                 <Link
                   href="/login"
                   className="inline-flex items-center gap-1.5 bg-gray-900 hover:bg-black text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-300"
                   aria-label="Sign in to LocalSoko"
                 >
                   <LogIn className="h-4 w-4" />
-                  <span>Login</span>
+                  <span className="hidden sm:inline">Login</span>
                 </Link>
               </div>
             )}
