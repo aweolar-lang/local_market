@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { 
-  MapPin, Search, PackageOpen, Grid, Smartphone, Car, Sofa, Shirt, Briefcase, MessageCircle, Phone 
+  MapPin, Search, PackageOpen, Grid, Smartphone, Car, Sofa, Shirt, Briefcase, MessageCircle, Phone, X, Zap, Crown
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import SkeletonCard from "@/components/SkeletonCard";
@@ -68,16 +68,19 @@ export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState("All"); 
   
   const [currentSlide, setCurrentSlide] = useState(0);
+  
+  // NEW: State for our Affiliate Marketing Promo Modal
+  const [showPromoModal, setShowPromoModal] = useState(false);
 
   // Auto-Slide Logic
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % HERO_SLIDES.length);
-    }, 5000); // Changes slide every 5 seconds
+    }, 5000); 
     return () => clearInterval(timer);
   }, []);
 
-  // Fetch Items & Auto-Locate on Load
+  // Fetch Items, Auto-Locate, & Show Promo Modal Logic
   useEffect(() => {
     const fetchItems = async () => {
       const { data, error } = await supabase
@@ -107,7 +110,6 @@ export default function Home() {
             }
           }, 
           () => {
-            // Silently fail if they deny permission; they can type it manually.
             toast.error("Location access denied. You can still search by typing your town.");
           },
           { enableHighAccuracy: false, timeout: 5000 }
@@ -115,9 +117,25 @@ export default function Home() {
       }
     };
 
+    // Promo Modal Logic: Check if they've seen it before
+    const hasSeenPromo = localStorage.getItem('hasSeenAffiliatePromo');
+    if (!hasSeenPromo) {
+      // Delay it by 3 seconds so they see the marketplace first
+      const promoTimer = setTimeout(() => {
+        setShowPromoModal(true);
+      }, 3000);
+      return () => clearTimeout(promoTimer);
+    }
+
     fetchItems();
     autoLocate();
   }, []);
+
+  // Closes the modal and never shows it again for this browser
+  const closePromoModal = () => {
+    setShowPromoModal(false);
+    localStorage.setItem('hasSeenAffiliatePromo', 'true');
+  };
 
   const displayItems = items
     .filter(item => {
@@ -140,21 +158,60 @@ export default function Home() {
   const isFiltering = searchQuery || userLocation || selectedCategory !== "All";
 
   return (
-    <div className="space-y-5 pb-8 max-w-7xl mx-auto">
+    <div className="space-y-5 pb-8 max-w-7xl mx-auto relative">
       
+      {/* 0. NEW: THE AFFILIATE PROMO MODAL (Z-50 Overlay) */}
+      {showPromoModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity">
+          <div className="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl relative animate-in zoom-in-95 duration-300">
+            <button onClick={closePromoModal} className="absolute top-4 right-4 p-2 bg-gray-100 hover:bg-gray-200 rounded-full text-gray-500 transition-colors z-10">
+              <X className="h-5 w-5" />
+            </button>
+            
+            <div className="bg-gradient-to-br from-indigo-900 to-gray-900 p-8 text-center relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
+                <Crown className="w-32 h-32" />
+              </div>
+              <div className="relative z-10">
+                <div className="mx-auto bg-yellow-400 w-16 h-16 rounded-full flex items-center justify-center shadow-lg mb-4 shadow-yellow-400/30">
+                  <Zap className="h-8 w-8 text-yellow-900" />
+                </div>
+                <h2 className="text-3xl font-black text-white mb-2">Turn your influence into <span className="text-green-400">Cash!</span></h2>
+                <p className="text-gray-300 text-sm">Join the LocalSoko Partner Hub and earn a massive 3-tier commission every time your friends join.</p>
+              </div>
+            </div>
+            
+            <div className="p-6 bg-gray-50 text-center">
+              <div className="flex justify-center gap-4 mb-6">
+                <div className="bg-white p-3 rounded-xl shadow-sm border border-gray-100 w-24">
+                  <p className="text-xs text-gray-500 font-bold uppercase mb-1">Level 1</p>
+                  <p className="text-lg font-black text-green-600">Ksh 150</p>
+                </div>
+                <div className="bg-white p-3 rounded-xl shadow-sm border border-gray-100 w-24">
+                  <p className="text-xs text-gray-500 font-bold uppercase mb-1">Level 2</p>
+                  <p className="text-lg font-black text-blue-600">Ksh 100</p>
+                </div>
+              </div>
+              <Link href="/affiliate" onClick={closePromoModal} className="block w-full bg-black hover:bg-gray-800 text-white font-bold py-4 rounded-xl transition-all shadow-md">
+                Claim Your Affiliate Link
+              </Link>
+              <button onClick={closePromoModal} className="mt-4 text-sm text-gray-500 hover:text-gray-800 font-medium">
+                No thanks, I just want to shop
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 1. COMPACT AUTO-SLIDING HERO */}
       <section className="relative rounded-2xl shadow-lg overflow-hidden mt-2 h-65 md:h-55 bg-emerald-900 group">
-        
-       
         <div 
           className="flex h-full transition-transform duration-700 ease-in-out"
           style={{ transform: `translateX(-${currentSlide * 100}%)` }}
         >
           {HERO_SLIDES.map((slide, index) => (
             <div key={index} className={`min-w-full h-full relative p-6 md:p-10 flex flex-col justify-center bg-linear-to-br ${slide.bg} text-white`}>
-        
               <div className="absolute top-0 right-0 -translate-y-1/4 translate-x-1/4 w-64 h-64 bg-white opacity-10 rounded-full blur-3xl pointer-events-none"></div>
-              
               <div className="relative z-10 max-w-xl space-y-2 md:space-y-3">
                 <h1 className="text-2xl md:text-4xl font-extrabold tracking-tight leading-tight">
                   {slide.title} <span className="text-emerald-300">{slide.highlight}</span>
@@ -174,16 +231,12 @@ export default function Home() {
             </div>
           ))}
         </div>
-
-        {/* Slide Indicators */}
         <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2 z-20">
           {HERO_SLIDES.map((_, index) => (
             <button
               key={index}
               onClick={() => setCurrentSlide(index)}
-              className={`h-1.5 rounded-full transition-all duration-300 ${
-                currentSlide === index ? "w-6 bg-white" : "w-2 bg-white/40 hover:bg-white/60"
-              }`}
+              className={`h-1.5 rounded-full transition-all duration-300 ${currentSlide === index ? "w-6 bg-white" : "w-2 bg-white/40 hover:bg-white/60"}`}
               aria-label={`Go to slide ${index + 1}`}
             />
           ))}
@@ -193,7 +246,6 @@ export default function Home() {
       {/* 2. COMPACT SEARCH BAR */}
       <section className="bg-white p-2.5 md:p-3 rounded-xl shadow-sm border border-gray-200 sticky top-4 z-30">
         <form className="flex flex-col sm:flex-row gap-2" onSubmit={(e) => e.preventDefault()}>
-          
           <div className="relative flex-1">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
             <input 
@@ -204,7 +256,6 @@ export default function Home() {
               className="w-full pl-10 pr-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm text-gray-900"
             />
           </div>
-
           <div className="relative flex-1 sm:max-w-50">
             <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
             <input 
@@ -215,7 +266,6 @@ export default function Home() {
               className="w-full pl-10 pr-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm text-gray-900"
             />
           </div>
-
           <button 
             type="button"
             onClick={() => { setSearchQuery(''); setUserLocation(''); setSelectedCategory('All'); }}
@@ -236,9 +286,7 @@ export default function Home() {
               key={cat.name}
               onClick={() => setSelectedCategory(cat.name)}
               className={`flex items-center gap-1.5 px-4 py-2 rounded-full whitespace-nowrap text-xs font-bold transition-all border ${
-                isSelected 
-                  ? "bg-emerald-700 text-white border-emerald-700 shadow-sm" 
-                  : "bg-white text-gray-600 border-gray-200 hover:border-emerald-300 hover:bg-emerald-50"
+                isSelected ? "bg-emerald-700 text-white border-emerald-700 shadow-sm" : "bg-white text-gray-600 border-gray-200 hover:border-emerald-300 hover:bg-emerald-50"
               }`}
             >
               <Icon className="h-3.5 w-3.5" />
@@ -247,6 +295,27 @@ export default function Home() {
           );
         })}
       </section>
+
+      {/* 4. NEW: INLINE AFFILIATE BANNER */}
+      <Link href="/affiliate" className="block group">
+        <section className="bg-gradient-to-r from-orange-50 via-yellow-50 to-orange-50 rounded-xl border border-orange-200 p-4 md:p-0 shadow-sm hover:shadow-md transition-shadow flex flex-col md:flex-row items-center justify-between relative overflow-hidden">
+          <div className="absolute right-0 top-0 h-full w-32 bg-gradient-to-l from-yellow-200/50 to-transparent pointer-events-none"></div>
+          <div className="md:px-6 md:py-4 flex items-center gap-4 text-center md:text-left z-10">
+            <div className="hidden md:flex bg-yellow-400 p-2.5 rounded-full shadow-sm text-yellow-900">
+              <Crown className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="font-extrabold text-orange-900 text-sm md:text-base">Want to earn passive income?</h3>
+              <p className="text-orange-800/80 text-xs md:text-sm font-medium mt-0.5">Invite friends to LocalSoko and earn up to <span className="font-bold">Ksh 150</span> per signup.</p>
+            </div>
+          </div>
+          <div className="md:pr-6 mt-3 md:mt-0 z-10 w-full md:w-auto">
+            <span className="flex items-center justify-center gap-2 bg-orange-500 group-hover:bg-orange-600 text-white px-5 py-2.5 rounded-lg text-sm font-bold shadow-sm transition-colors">
+              Open Partner Hub <Zap className="h-4 w-4" />
+            </span>
+          </div>
+        </section>
+      </Link>
 
       {/* RESULTS HEADER */}
       {!loading && (
@@ -295,7 +364,6 @@ export default function Home() {
 
           return (
             <article key={item.id} className="group bg-white rounded-xl overflow-hidden border border-gray-200 shadow-sm hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300 flex flex-col">
-              {/* IMAGE */}
               <Link href={`/${item.slug}`} className="relative h-48 w-full bg-gray-100 overflow-hidden block">
                 {isLocalMatch && (
                   <div className="absolute top-2 left-2 z-10 bg-emerald-600 text-white text-[10px] font-bold px-2 py-1 rounded-md shadow-sm uppercase tracking-wide flex items-center gap-1">
@@ -318,8 +386,6 @@ export default function Home() {
                   className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
                 />
               </Link>
-
-              {/* CONTENT */}
               <div className="p-4 flex flex-col grow">
                 <div className="flex-1 min-w-0 mb-1">
                   <Link href={`/${item.slug}`} className="hover:text-emerald-700 transition-colors">
