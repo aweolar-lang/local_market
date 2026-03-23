@@ -43,6 +43,7 @@ function AuthForm() {
         setMessage({ type: 'error', text: error.message });
       } else {
         setMessage({ type: 'success', text: "Success! Check your email to confirm your account." });
+        window.location.href = "/login";
       }
     } else {
       // --- LOGIN LOGIC ---
