@@ -55,7 +55,7 @@ export default function DashboardPage() {
         .from("profiles")
         .select("is_affiliate, referral_code, wallet_balance")
         .eq("id", session.user.id)
-        .single();
+        .maybeSingle();
       if (profileData) setProfile(profileData);
 
       setLoading(false);
@@ -98,15 +98,7 @@ export default function DashboardPage() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center py-20">
-        <Loader2 className="h-10 w-10 animate-spin text-green-500" />
-      </div>
-    );
-  }
-
-const handleActivateAffiliate = async () => {
+  const handleActivateAffiliate = async () => {
   // Ask the user for their M-Pesa number
   const phone = window.prompt("Enter your M-Pesa number (e.g., 0712345678):");
   if (!phone) return;
@@ -134,6 +126,14 @@ const handleActivateAffiliate = async () => {
   }
 };
 
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-20">
+        <Loader2 className="h-10 w-10 animate-spin text-green-500" />
+      </div>
+    );
+  }
   return (
     <div className="max-w-4xl mx-auto space-y-8 pb-10">
       {/* Affiliate & Wallet Section */}

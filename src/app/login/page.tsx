@@ -2,63 +2,62 @@
 
 import { useState, Suspense } from "react";
 import { supabase } from "@/lib/supabase";
-import { Mail, Lock, AlertCircle } from "lucide-react";
+import { Mail, Lock, AlertCircle, User as UserIcon, Phone } from "lucide-react";
 import { useSearchParams } from "next/navigation"; 
 
-// 1. We wrap the main logic in a separate component. 
-// 2. (Next.js requires useSearchParams to be inside a Suspense boundary for production builds)
 function AuthForm() {
+  // Add a state to toggle between Login and Sign Up views
+  const [isSignUp, setIsSignUp] = useState(false);
+  
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("");     // NEW
+  const [phoneNumber, setPhoneNumber] = useState(""); // NEW
+  
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'error' | 'success', text: string } | null>(null);
 
-  // 3. Grab the referral code from the URL (e.g., ?ref=DAVID123)
   const searchParams = useSearchParams();
   const referralCode = searchParams.get("ref"); 
 
-  // Handles creating a brand new account
-  const handleSignUp = async (e: React.FormEvent) => {
+  const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setMessage(null);
 
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      // 4. Send the referral code to our Postgres Trigger!
-      options: {
-        data: {
-          referred_by_code: referralCode || null, 
+    if (isSignUp) {
+      // --- SIGN UP LOGIC ---
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: fullName,       
+            phone_number: phoneNumber, 
+            referred_by_code: referralCode || null, 
+          }
         }
+      });
+
+      if (error) {
+        setMessage({ type: 'error', text: error.message });
+      } else {
+        setMessage({ type: 'success', text: "Success! Check your email to confirm your account." });
       }
-    });
-
-    if (error) {
-      setMessage({ type: 'error', text: error.message });
     } else {
-      setMessage({ type: 'success', text: "Success! Check your email to confirm your account." });
+      // --- LOGIN LOGIC ---
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        setMessage({ type: 'error', text: error.message });
+      } else {
+        window.location.href = "/sell"; // Or wherever your dashboard is
+      }
     }
-    setIsLoading(false);
-  };
-
-  // Handles logging into an existing account
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setMessage(null);
-
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) {
-      setMessage({ type: 'error', text: error.message });
-    } else {
-      // If successful, redirect them back to the sell page
-      window.location.href = "/sell";
-    }
+    
     setIsLoading(false);
   };
 
@@ -73,8 +72,42 @@ function AuthForm() {
         </div>
       )}
 
-      <form className="space-y-5 text-black">
-        {/* Email Input */}
+      <form onSubmit={handleAuth} className="space-y-5 text-black">
+        
+        {isSignUp && (
+          <>
+            <div>
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                <UserIcon className="h-4 w-4 text-black" />
+                Full Name
+              </label>
+              <input 
+                type="text" 
+                required={isSignUp}
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                placeholder="John Doe" 
+                className="w-full px-4 py-3 border border-gray-600 rounded-xl focus:ring-2 focus:ring-green-500 outline-none"
+              />
+            </div>
+            <div>
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                <Phone className="h-4 w-4 text-black" />
+                Phone Number
+              </label>
+              <input 
+                type="tel" 
+                required={isSignUp}
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+                placeholder="0712345678" 
+                className="w-full px-4 py-3 border border-gray-600 rounded-xl focus:ring-2 focus:ring-green-500 outline-none"
+              />
+            </div>
+          </>
+        )}
+
+        {/* ALWAYS SHOW EMAIL & PASSWORD */}
         <div>
           <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
             <Mail className="h-4 w-4 text-black" />
@@ -86,11 +119,10 @@ function AuthForm() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@example.com" 
-            className="w-full px-4 py-3 border border-gray-600 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all outline-none"
+            className="w-full px-4 py-3 border border-gray-600 rounded-xl focus:ring-2 focus:ring-green-500 outline-none"
           />
         </div>
 
-        {/* Password Input */}
         <div>
           <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
             <Lock className="h-4 w-4 text-black" />
@@ -102,35 +134,32 @@ function AuthForm() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="••••••••" 
-            className="w-full px-4 py-3 border border-gray-600 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all outline-none"
+            className="w-full px-4 py-3 border border-gray-600 rounded-xl focus:ring-2 focus:ring-green-500 outline-none"
           />
         </div>
 
         {/* Action Buttons */}
         <div className="pt-4 space-y-3">
           <button 
-            onClick={handleLogin}
+            type="submit"
             disabled={isLoading}
-            type="button"
-            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-70 disabled:cursor-not-allowed transition-all"
+            className="w-full flex justify-center py-3 px-4 rounded-xl shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 transition-all"
           >
-            {isLoading ? "Loading..." : "Log In"}
+            {isLoading ? "Loading..." : (isSignUp ? "Create Account" : "Log In")}
           </button>
           
-          <div className="relative flex items-center py-2">
-            <div className="grow border-t border-gray-200"></div>
-            <span className="shrink-0 px-4 text-sm text-gray-400">or</span>
-            <div className="grow border-t border-gray-200"></div>
+          <div className="text-center mt-4">
+            <button 
+              type="button"
+              onClick={() => {
+                setIsSignUp(!isSignUp);
+                setMessage(null);
+              }}
+              className="text-sm text-green-600 hover:text-green-700 font-medium"
+            >
+              {isSignUp ? "Already have an account? Log In" : "Need an account? Sign Up"}
+            </button>
           </div>
-
-          <button 
-            onClick={handleSignUp}
-            disabled={isLoading}
-            type="button"
-            className="w-full flex justify-center py-3 px-4 border border-gray-300 rounded-xl shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-70 disabled:cursor-not-allowed transition-all"
-          >
-            Create New Account
-          </button>
         </div>
       </form>
     </div>
