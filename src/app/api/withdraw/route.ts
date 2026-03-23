@@ -15,16 +15,15 @@ export async function POST(req: Request) {
 
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('phone') 
+      .select('phone_number') 
       .eq('id', userId)
       .single();
 
-    if (profileError || !profile?.phone) {
+    if (profileError || !profile?.phone_number) {
       return NextResponse.json({ success: false, error: "No registered phone number found on your account. Please update your profile." }, { status: 400 });
     }
 
-    const targetPhone = profile.phone; 
-
+    const targetPhone = profile.phone_number.startsWith('0') ? `254${profile.phone_number.slice(1)}` : profile.phone_number;
     const { data: ledgerEntries } = await supabase
       .from('transactions')
       .select('amount')
