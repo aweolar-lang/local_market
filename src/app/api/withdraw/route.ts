@@ -64,8 +64,8 @@ export async function POST(req: Request) {
     if (withdrawError) throw withdrawError;
 
 
-    const consumerKey = process.env.MPESA_CONSUMER_KEY!;
-    const consumerSecret = process.env.MPESA_CONSUMER_SECRET!;
+    const consumerKey = process.env.MPESA_B2C_CONSUMER_KEY!;
+    const consumerSecret = process.env.MPESA_B2C_CONSUMER_SECRET!;
     const auth = Buffer.from(`${consumerKey}:${consumerSecret}`).toString("base64");
     
     const tokenResponse = await fetch("https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials", {
