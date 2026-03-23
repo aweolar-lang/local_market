@@ -222,7 +222,7 @@ export default function AffiliatePage() {
         )}
         <div className="max-w-6xl mx-auto px-4 h-16 flex justify-between items-center">
           <Link href="/dashboard" className="flex items-center gap-2 text-gray-600 hover:text-black font-semibold transition-colors text-sm bg-gray-50 px-4 py-2 rounded-lg border border-gray-100">
-             <ArrowLeft className="h-4 w-4" /> Dashboard
+             Dashboard
           </Link>
           <div className="flex items-center gap-4">
             <div className="hidden md:block text-right">
