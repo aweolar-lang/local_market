@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js"; // Import the direct client
+import { createClient } from "@supabase/supabase-js"; 
 
 // Initialize the Admin Client to bypass Row Level Security (RLS)
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY! // The secret admin key you just added
+  process.env.SUPABASE_SERVICE_ROLE_KEY! 
 );
 
 export async function POST(req: Request) {
@@ -18,7 +18,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, error: "Minimum withdrawal is Ksh 150" }, { status: 400 });
     }
 
-    // 1. FETCH PROFILE (Now using Admin Client to bypass RLS!)
+    // 1. FETCH PROFILE
     const { data: profile, error: profileError } = await supabaseAdmin
       .from('profiles')
       .select('phone_number') 
@@ -30,12 +30,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, error: "No registered phone number found on your account. Please update your profile." }, { status: 400 });
     }
 
-    // Bulletproof phone formatting for Safaricom (Must be 2547...)
+    // Bulletproof phone formatting for Safaricom
     let targetPhone = profile.phone_number.trim();
     if (targetPhone.startsWith('+')) targetPhone = targetPhone.slice(1);
     if (targetPhone.startsWith('0')) targetPhone = `254${targetPhone.slice(1)}`;
 
-    // 2. FETCH LEDGER BALANCE (Using Admin Client)
+    // 2. FETCH LEDGER BALANCE
     const { data: ledgerEntries } = await supabaseAdmin
       .from('transactions')
       .select('amount')
@@ -47,7 +47,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, error: `Insufficient funds. Your true balance is Ksh ${trueBalance}` }, { status: 400 });
     }
 
-    // 3. DEDUCT FROM LEDGER (Using Admin Client)
+    // 3. DEDUCT FROM LEDGER
     const { data: transactionData, error: insertTxnError } = await supabaseAdmin
       .from('transactions')
       .insert({
@@ -61,8 +61,8 @@ export async function POST(req: Request) {
 
     if (insertTxnError) throw insertTxnError;
 
-    // 4. QUEUE THE PAYOUT (Using Admin Client)
-    const { error: withdrawError } = await supabaseAdmin
+   
+    const { data: withdrawData, error: withdrawError } = await supabaseAdmin
       .from('withdrawals2')
       .insert({
         user_id: userId,
@@ -70,13 +70,12 @@ export async function POST(req: Request) {
         phone_number: targetPhone,
         status: 'processing',
         transaction_id: transactionData.id
-      });
+      })
+      .select('id')
+      .single();
 
     if (withdrawError) throw withdrawError;
 
-    // ----------------------------------------------------
-    // SAFARICOM M-PESA B2C LOGIC
-    // ----------------------------------------------------
     const consumerKey = process.env.MPESA_B2C_CONSUMER_KEY!;
     const consumerSecret = process.env.MPESA_B2C_CONSUMER_SECRET!;
     const auth = Buffer.from(`${consumerKey}:${consumerSecret}`).toString("base64");
@@ -100,15 +99,16 @@ export async function POST(req: Request) {
         PartyA: process.env.MPESA_B2C_SHORTCODE, 
         PartyB: targetPhone,
         Remarks: "LocalSoko Affiliate Payout",
-        QueueTimeOutURL: `${process.env.NEXT_PUBLIC_SITE_URL}/api/mpesa/b2c-timeout`,
-        ResultURL: `${process.env.NEXT_PUBLIC_SITE_URL}/api/mpesa/b2c-result`,
+       
+        QueueTimeOutURL: `${process.env.NEXT_PUBLIC_SITE_URL}/api/mpesa/b2c-timeout?w_id=${withdrawData.id}`,
+        ResultURL: `${process.env.NEXT_PUBLIC_SITE_URL}/api/mpesa/b2c-result?w_id=${withdrawData.id}`,
         Occasion: "Affiliate Payout"
       }),
     });
 
     const b2cData = await b2cResponse.json();
 
-    // 5. UPDATE WALLET BALANCE (Using Admin Client)
+    // 5. UPDATE WALLET BALANCE
     await supabaseAdmin.from('profiles').update({ wallet_balance: trueBalance - amount }).eq('id', userId);
 
     return NextResponse.json({ 

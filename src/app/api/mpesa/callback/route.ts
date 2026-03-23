@@ -8,21 +8,28 @@ const supabaseAdmin = createClient(
 
 export async function POST(req: Request) {
   try {
-   
     const url = new URL(req.url);
     const userId = url.searchParams.get('userId');
     
-    // 1. Parse Safaricom's JSON receipt
     const body = await req.json();
     const callbackData = body.Body.stkCallback;
 
-    // ResultCode 0 means the payment was completely successful
     if (callbackData.ResultCode === 0 && userId) {
       
-      // Generate a unique 8-character referral code for them
+      // 🚨 NEW FIX: CHECK IF ALREADY PROCESSED TO PREVENT SAFARICOM RETRY BUGS
+      const { data: existingProfile } = await supabaseAdmin
+        .from('profiles')
+        .select('is_affiliate')
+        .eq('id', userId)
+        .single();
+
+      if (existingProfile?.is_affiliate) {
+        console.log("Safaricom Retry Detected. User is already an affiliate. Skipping.");
+        // Return success so Safaricom stops retrying!
+        return NextResponse.json({ ResultCode: 0, ResultDesc: "Success" });
+      }
       const referralCode = `REF-${userId.substring(0, 8).toUpperCase()}`;
 
-      // 2. Update the user's profile to make them an official Affiliate
       const { error: updateError } = await supabaseAdmin
         .from('profiles')
         .update({ 
@@ -31,17 +38,11 @@ export async function POST(req: Request) {
         })
         .eq('id', userId);
 
-      if (updateError) {
-        console.error("Failed to update profile:", updateError);
-      } else {
-        // 3. Trigger the database function to distribute the 150/100/50/10 commissions!
+      if (!updateError) {
         await supabaseAdmin.rpc('distribute_commissions', { new_affiliate_id: userId });
       }
-    } else {
-      console.log("Payment failed or cancelled by user. Safaricom Reason:", callbackData.ResultDesc);
     }
 
-    // 5. ALWAYS return a success response to Safaricom, otherwise they will retry sending this receipt every 5 minutes
     return NextResponse.json({ ResultCode: 0, ResultDesc: "Success" });
 
   } catch (error) {
