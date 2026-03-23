@@ -12,7 +12,8 @@ interface AffiliateStats {
   wallet_balance: number;
   total_invites: number;
   is_founder: boolean;
-  is_admin?: boolean; 
+  is_admin?: boolean;
+  phone_number?: string;
 }
 
 export default function AffiliatePage() {
@@ -27,6 +28,12 @@ export default function AffiliatePage() {
   const [phoneInput, setPhoneInput] = useState("");
   const [paymentStatus, setPaymentStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [paymentMessage, setPaymentMessage] = useState("");
+  const [withdrawAmount, setWithdrawAmount] = useState("");
+  const [withdrawStatus, setWithdrawStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [withdrawMessage, setWithdrawMessage] = useState("");
+
+  const [withdrawPhone, setWithdrawPhone] = useState("");
+ 
 
   useEffect(() => {
     setSiteUrl(window.location.origin);
@@ -40,7 +47,7 @@ export default function AffiliatePage() {
 
       const { data: profile } = await supabase
         .from("profiles")
-        .select("username,is_admin, is_affiliate, referral_code, wallet_balance, is_founder")
+        .select("username,is_admin, is_affiliate, referral_code, wallet_balance, is_founder, phone_number")
         .eq("id", session.user.id)
         .single();
 
@@ -59,6 +66,7 @@ export default function AffiliatePage() {
           total_invites: count || 0,
           is_founder: profile.is_founder || false,
           is_admin: profile.is_admin || false,
+          phone_number: profile.phone_number || "No phone registered",
         });
       }
       setLoading(false);
@@ -91,6 +99,43 @@ export default function AffiliatePage() {
       setPaymentMessage("A network error occurred.");
     }
   };
+
+
+  const handleWithdrawal = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setWithdrawStatus('loading');
+    setWithdrawMessage("");
+    
+    try {
+      const res = await fetch("/api/withdraw", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          userId: userId, 
+          amount: Number(withdrawAmount), 
+          // Server safely handles the phone number now
+        }),
+      });
+      const data = await res.json();
+      
+      if (data.success) {
+        setWithdrawStatus('success');
+        setWithdrawMessage(data.message);
+        
+        if (stats) {
+          setStats({ ...stats, wallet_balance: stats.wallet_balance - Number(withdrawAmount) });
+        }
+        setWithdrawAmount("");
+      } else {
+        setWithdrawStatus('error');
+        setWithdrawMessage(data.error);
+      }
+    } catch (err) {
+      setWithdrawStatus('error');
+      setWithdrawMessage("Network error processing withdrawal.");
+    }
+  };
+  
 
   const copyToClipboard = () => {
     if (!stats || !isAffiliate) return;
@@ -172,14 +217,56 @@ export default function AffiliatePage() {
                     {stats?.wallet_balance.toLocaleString()}
                   </h1>
                 </div>
-                <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                  <button 
-                    disabled={!isAffiliate}
-                    className="disabled:opacity-50 disabled:cursor-not-allowed bg-white hover:bg-gray-100 text-black px-8 py-4 rounded-xl font-bold text-lg transition-all shadow-lg"
-                  >
-                    {isAffiliate ? "Withdraw to M-Pesa" : "Activate to Withdraw"}
-                  </button>
-                </div>
+                {/* WITHDRAWAL CARD */}
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mt-6">
+        <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+          <Zap className="h-5 w-5 text-orange-500" />
+          Withdraw Earnings
+        </h3>
+        
+        <form onSubmit={handleWithdrawal} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Amount (Ksh)</label>
+              <input 
+                type="number" 
+                required 
+                min="100"
+                max={stats?.wallet_balance || 0}
+                value={withdrawAmount}
+                onChange={(e) => setWithdrawAmount(e.target.value)}
+                placeholder="e.g. 500"
+                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">M-Pesa Number</label>
+              <input 
+                type="text" 
+                required 
+                value={withdrawPhone}
+                onChange={(e) => setWithdrawPhone(e.target.value)}
+                placeholder="e.g. 0712345678"
+                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              />
+            </div>
+          </div>
+          
+          <button 
+            type="submit" 
+            disabled={withdrawStatus === 'loading' || !stats || stats.wallet_balance < 100}
+            className="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold py-3 rounded-xl transition-colors shadow-md"
+          >
+            {withdrawStatus === 'loading' ? 'Processing...' : 'Request Payout'}
+          </button>
+
+          {withdrawMessage && (
+            <p className={`text-sm font-bold text-center mt-2 ${withdrawStatus === 'success' ? 'text-green-600' : 'text-red-500'}`}>
+              {withdrawMessage}
+            </p>
+          )}
+        </form>
+      </div>
               </div>
             </div>
 
@@ -220,7 +307,7 @@ export default function AffiliatePage() {
                       <input 
                         type="tel" required placeholder="M-Pesa Number (e.g. 07...)"
                         value={phoneInput} onChange={(e) => setPhoneInput(e.target.value)}
-                        className="w-full px-5 py-4 bg-gray-50 border border-gray-700 rounded-xl text-sm font-medium focus:ring-2 focus:ring-green-500 outline-none transition-all"
+                        className="w-full px-5 py-4 text-black bg-gray-50 border border-gray-500 rounded-xl text-sm font-medium focus:ring-2 focus:ring-green-500 outline-none transition-all"
                       />
                     </div>
                     {paymentStatus === 'error' && <p className="text-red-500 text-xs font-bold">{paymentMessage}</p>}
