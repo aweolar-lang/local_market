@@ -91,6 +91,33 @@ export default function AffiliatePage() {
     fetchData();
   }, [router]);
 
+  // AUTO-VERIFY MPESA PAYMENT
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+
+    if (paymentStatus === 'success' && userId) {
+      interval = setInterval(async () => {
+        const { data } = await supabase
+          .from("profiles")
+          .select("is_affiliate")
+          .eq("id", userId)
+          .single();
+
+        if (data && data.is_affiliate === true) {
+          clearInterval(interval);
+          setPaymentMessage("Payment received! Unlocking your dashboard...");
+          setTimeout(() => {
+            window.location.reload();
+          }, 1500);
+        }
+      }, 3000); 
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [paymentStatus, userId]);
+
   const handleMpesaSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setPaymentStatus('loading');
@@ -194,8 +221,8 @@ export default function AffiliatePage() {
           </Link>
         )}
         <div className="max-w-6xl mx-auto px-4 h-16 flex justify-between items-center">
-          <Link href="/" className="flex items-center gap-2 text-gray-600 hover:text-black font-semibold transition-colors text-sm bg-gray-50 px-4 py-2 rounded-lg border border-gray-100">
-             <ArrowLeft className="h-4 w-4" /> Back to Marketplace
+          <Link href="/dashboard" className="flex items-center gap-2 text-gray-600 hover:text-black font-semibold transition-colors text-sm bg-gray-50 px-4 py-2 rounded-lg border border-gray-100">
+             <ArrowLeft className="h-4 w-4" /> Dashboard
           </Link>
           <div className="flex items-center gap-4">
             <div className="hidden md:block text-right">
@@ -264,7 +291,7 @@ export default function AffiliatePage() {
                           value={withdrawAmount}
                           onChange={(e) => setWithdrawAmount(e.target.value)}
                           placeholder="Min. Ksh 150"
-                          className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-4 focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium"
+                          className="w-full bg-gray-50 text-black border border-gray-200 rounded-xl px-4 py-4 focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium"
                         />
                       </div>
                       <div>
@@ -285,7 +312,7 @@ export default function AffiliatePage() {
                       disabled={withdrawStatus === 'loading' || !stats || stats.wallet_balance < 150}
                       className="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl transition-colors shadow-md text-lg"
                     >
-                      {withdrawStatus === 'loading' ? 'Processing...' : 'Auto-Transfer to M-Pesa'}
+                      {withdrawStatus === 'loading' ? 'Processing...' : 'Withdraw to M-Pesa'}
                     </button>
 
                     {withdrawMessage && (
@@ -365,10 +392,10 @@ export default function AffiliatePage() {
                 <p className="text-gray-500 text-sm mb-6 max-w-md">Pay a one-time activation fee of Ksh 400 to unlock your unique link, start earning 3 tiers of commissions, and claim your VIP Seller badge.</p>
                 
                 {paymentStatus === 'success' ? (
-                  <div className="text-center py-6 bg-green-50 rounded-2xl border border-green-100">
-                    <Smartphone className="h-10 w-10 text-green-600 mx-auto animate-pulse mb-3" />
-                    <p className="text-green-800 font-bold">{paymentMessage}</p>
-                    <button onClick={() => window.location.reload()} className="mt-4 bg-black text-white px-8 py-3 rounded-xl text-sm font-bold shadow-lg">I have paid, refresh</button>
+                  <div className="text-center py-8 bg-green-50 rounded-2xl border border-green-200 shadow-inner">
+                    <Loader2 className="h-12 w-12 text-green-500 mx-auto animate-spin mb-4" />
+                    <h3 className="text-lg font-black text-green-800 mb-1">Awaiting Payment...</h3>
+                    <p className="text-green-700 font-medium text-sm px-4">{paymentMessage}</p>
                   </div>
                 ) : (
                   <form onSubmit={handleMpesaSubmit} className="space-y-4 max-w-sm">
