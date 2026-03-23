@@ -30,6 +30,7 @@ export default function DashboardPage() {
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [invitesCount, setInvitesCount] = useState(0);
 
   // M-Pesa Modal States
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -53,12 +54,26 @@ export default function DashboardPage() {
         .order("created_at", { ascending: false });
       if (itemsData) setItems(itemsData as Item[]);
 
+      // Fetch Profile and Invites
       const { data: profileData } = await supabase
         .from("profiles")
         .select("is_affiliate, referral_code, wallet_balance")
         .eq("id", session.user.id)
         .maybeSingle();
-      if (profileData) setProfile(profileData);
+        
+      if (profileData) {
+        setProfile(profileData);
+        
+        // If they are an affiliate, quickly count their invites!
+        if (profileData.is_affiliate) {
+          const { count } = await supabase
+            .from("profiles")
+            .select("*", { count: 'exact', head: true })
+            .eq("referred_by", session.user.id);
+            
+          setInvitesCount(count || 0);
+        }
+      }
 
       setLoading(false);
     };
@@ -137,22 +152,34 @@ export default function DashboardPage() {
   return (
     <div className="max-w-4xl mx-auto space-y-8 pb-10 px-4 mt-8">
       
-      {/* 1. The Switcher / Upsell Banner */}
       {profile && (
         <div className="mb-8">
           {profile.is_affiliate ? (
             <div className="bg-gradient-to-r from-gray-900 to-black p-6 md:p-8 rounded-2xl shadow-lg border border-gray-800 flex flex-col md:flex-row justify-between items-center gap-6">
-              <div>
-                <p className="text-gray-400 text-sm mb-1 uppercase tracking-wider font-semibold">Affiliate Status</p>
-                <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-                  <TrendingUp className="text-green-400 h-6 w-6" /> Active Partner
-                </h2>
+              
+              {/* Stats Snapshot */}
+              <div className="flex gap-8 items-center w-full md:w-auto">
+                <div>
+                  <p className="text-gray-400 text-xs md:text-sm mb-1 uppercase tracking-wider font-semibold">Wallet Balance</p>
+                  <h2 className="text-2xl md:text-3xl font-black text-green-400">
+                    Ksh {profile.wallet_balance.toLocaleString()}
+                  </h2>
+                </div>
+                <div className="w-px h-10 md:h-12 bg-gray-800"></div>
+                <div>
+                  <p className="text-gray-400 text-xs md:text-sm mb-1 uppercase tracking-wider font-semibold">Total Invites</p>
+                  <h2 className="text-2xl md:text-3xl font-black text-white">
+                    {invitesCount}
+                  </h2>
+                </div>
               </div>
+
+              {/* Link to Full Affiliate Page */}
               <Link 
                 href="/affiliate" 
-                className="w-full md:w-auto bg-green-500 hover:bg-green-600 text-black px-6 py-3 rounded-xl font-bold transition-all shadow-sm text-center"
+                className="w-full md:w-auto bg-green-500 hover:bg-green-600 text-black px-6 py-3 rounded-xl font-bold transition-all shadow-sm text-center whitespace-nowrap"
               >
-                Go to Affiliate Dashboard
+                Manage Affiliate Account
               </Link>
             </div>
           ) : (
@@ -161,12 +188,12 @@ export default function DashboardPage() {
                 <h2 className="text-xl font-bold text-green-900">Want to earn passive income?</h2>
                 <p className="text-green-700 text-sm mt-1">Join the Affiliate Program for Ksh 400 and earn up to Ksh 150 for every friend you invite.</p>
               </div>
-              <button 
-                onClick={() => setIsModalOpen(true)}
-                className="w-full md:w-auto bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-sm shrink-0 whitespace-nowrap"
+              <Link 
+                href="/affiliate" 
+                className="w-full md:w-auto bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-sm text-center whitespace-nowrap"
               >
-                Activate Affiliate Account
-              </button>
+                Activate Account
+              </Link>
             </div>
           )}
         </div>
