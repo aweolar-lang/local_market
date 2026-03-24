@@ -359,22 +359,29 @@ export default function AffiliatePage() {
                 </div>
 
                 {/* 3. INVITE LINK */}
-                <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100">
-                  <div className="flex items-center justify-between mb-6">
-                    <div className="flex items-center gap-3">
-                      <div className="p-3 bg-green-50 text-green-600 rounded-xl"><Users className="h-6 w-6" /></div>
-                      <h3 className="text-xl font-bold text-gray-900">Your Invite Link</h3>
-                    </div>
-                    <div className="bg-gray-100 text-gray-600 px-3 py-1 rounded-lg text-xs font-bold uppercase">Active</div>
-                  </div>
-                  <p className="text-gray-500 text-sm mb-6">Share this link. Earn commissions passively when your friends join and invite others.</p>
-                  <div className="flex bg-gray-50 border border-gray-200 rounded-xl p-2 shadow-inner">
-                    <input readOnly value={`${siteUrl}/auth?ref=${stats?.referral_code}`} className="bg-transparent flex-1 px-4 text-sm outline-none font-medium text-gray-700" />
-                    <button onClick={copyToClipboard} className="bg-black hover:bg-gray-800 text-white px-6 py-3 rounded-lg text-sm font-bold flex items-center gap-2 transition-colors">
-                      {copied ? <><Check className="h-4 w-4"/> Copied!</> : <><Copy className="h-4 w-4"/> Copy Link</>}
-                    </button>
-                  </div>
-                </div>
+          <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-green-50 text-green-600 rounded-xl"><Users className="h-6 w-6" /></div>
+                <h3 className="text-xl font-bold text-gray-900">Your Invite Link</h3>
+              </div>
+              <div className="bg-gray-100 text-gray-600 px-3 py-1 rounded-lg text-xs font-bold uppercase">Active</div>
+            </div>
+            <p className="text-gray-500 text-sm mb-6">Share this link. Earn commissions passively when your friends join and invite others.</p>
+            <div className="flex flex-col sm:flex-row bg-gray-50 border border-gray-200 rounded-xl p-2 shadow-inner gap-2">
+              <input 
+                readOnly 
+                value={`${siteUrl}/auth?ref=${stats?.referral_code}`} 
+                className="bg-transparent flex-1 px-3 py-2 text-sm outline-none font-medium text-gray-700 min-w-0 truncate" 
+              />
+              <button 
+                onClick={copyToClipboard} 
+                className="bg-black hover:bg-gray-800 text-white px-6 py-3 rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition-colors shrink-0 w-full sm:w-auto"
+              >
+                {copied ? <><Check className="h-4 w-4"/> Copied!</> : <><Copy className="h-4 w-4"/> Copy Link</>}
+              </button>
+            </div>
+          </div>
 
                 {/* 4. TRANSACTION LEDGER */}
                 <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">

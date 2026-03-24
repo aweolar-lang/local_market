@@ -43,9 +43,14 @@ function AuthForm() {
       if (error) {
         setMessage({ type: 'error', text: error.message });
       } else {
-        toast.success("Success! Check your email to confirm your account.");
+
+      toast.success("Success! Check your email to confirm your account.");
+      setTimeout(() => {
         window.location.href = "/auth";
+      }, 1500);
+
       }
+      
     } else {
       // --- LOGIN LOGIC ---
       const { error } = await supabase.auth.signInWithPassword({
