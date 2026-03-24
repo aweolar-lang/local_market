@@ -183,8 +183,8 @@ export default function DashboardPage() {
 
       {/* Secondary Guide Button */}
       <Link
-        href="/guide"
-        className="w-full text-center text-sm font-semibold text-gray-400 hover:text-white border border-gray-700 hover:border-gray-500 bg-gray-800/30 px-6 py-2.5 rounded-xl transition-all"
+        href="/affiliate-guide"
+        className="w-full text-center text-sm font-semibold bg-gray-800 text-gray-300 hover:text-white border border-gray-700 hover:border-gray-500 bg-gray-800/30 px-6 py-2.5 rounded-xl transition-all"
       >
         Read the Affiliate Guide
       </Link>
