@@ -90,11 +90,11 @@ export default function Navbar() {
                 <button
                   type="button"
                   onClick={handleLogout}
-                  className="flex items-center gap-1.5 text-sm font-medium text-red-500 hover:text-red-600 transition-colors focus:outline-none focus:ring-2 focus:ring-red-200 rounded"
+                  className="flex items-center gap-1.5 text-sm font-medium text-white bg-red-500 hover:bg-red-600 transition-colors focus:outline-none focus:ring-2 focus:ring-red-200 rounded"
                   aria-label="Sign out"
                 >
                   <LogOut className="h-4 w-4" />
-                  <span className="hidden sm:inline bg-red-500 text-white px-2 py-1 rounded">Logout</span>
+                  <span className="hidden sm:inline">Logout</span>
                 </button>
               </div>
             ) : (
