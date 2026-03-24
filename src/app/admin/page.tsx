@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { 
   Users, DollarSign, Wallet, ArrowDownRight, 
-  Activity, Clock, Landmark, CheckCircle, ListOrdered, UserCheck
+  Activity, Clock, Landmark, CheckCircle, ListOrdered, UserCheck,
+  Shield, Crown
 } from "lucide-react";
 
 export default function AdminDashboard() {
@@ -22,6 +23,8 @@ export default function AdminDashboard() {
     usersUnclaimedMoney: 0,
     platformProfit: 0,
     adminPersonalWallet: 0,
+    totalAdmins: 0,      
+    totalFounders: 0,   
   });
 
   const [pendingWithdrawals, setPendingWithdrawals] = useState<any[]>([]);
@@ -51,29 +54,24 @@ export default function AdminDashboard() {
   };
 
   const fetchAllData = async (adminWallet: number) => {
-    // 1. Fetch Profile Stats
-    const { data: profiles } = await supabase.from('profiles').select('*');
-    if (profiles) {
-      const totalUsers = profiles.length;
-      const affiliates = profiles.filter(p => p.is_affiliate).length;
-      const referredJoins = profiles.filter(p => p.referred_by !== null).length;
-      const directJoins = totalUsers - referredJoins;
+    // 1. Fetch from the new Master Ledger View! (No frontend math needed)
+    const { data: dbStats, error: statsError } = await supabase
+      .from('system_master_ledger')
+      .select('*')
+      .single();
 
-      const grossRevenue = affiliates * 400;
-      const usersUnclaimedMoney = profiles
-        .filter(p => !p.is_admin)
-        .reduce((sum, p) => sum + (p.wallet_balance || 0), 0);
-      const platformProfit = grossRevenue - usersUnclaimedMoney - adminWallet;
-
+    if (dbStats && !statsError) {
       setStats({
-        totalUsers,
-        affiliates,
-        directJoins,
-        referredJoins,
-        grossRevenue,
-        usersUnclaimedMoney,
-        platformProfit,
+        totalUsers: dbStats.total_registered_users || 0,
+        affiliates: dbStats.active_paid_users || 0,
+        directJoins: dbStats.direct_joins || 0,
+        referredJoins: dbStats.referred_joins || 0,
+        grossRevenue: dbStats.gross_revenue || 0,
+        usersUnclaimedMoney: dbStats.total_customers_money || 0,
+        platformProfit: dbStats.gross_platform_profit || 0,
         adminPersonalWallet: adminWallet,
+        totalAdmins: dbStats.total_admins || 0,
+        totalFounders: dbStats.total_founders || 0,
       });
     }
 
@@ -98,7 +96,7 @@ export default function AdminDashboard() {
     setLoading(false);
   };
 
-  // MARK A WITHDRAWAL AS PAID
+  // MARK A WITHDRAWAL AS PAID (Kept as a manual fallback just in case Safaricom B2C fails)
   const handleMarkAsPaid = async (withdrawalId: string) => {
     const confirmPay = window.confirm("Did you actually send the M-Pesa to this user? This cannot be undone.");
     if (!confirmPay) return;
@@ -174,7 +172,7 @@ export default function AdminDashboard() {
       {/* 2. MIDDLE ROW: GROWTH & ACTION QUEUE */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         
-        {/* NETWORK GROWTH */}
+        {/* NETWORK GROWTH & ELITE TRACKING */}
         <div className="bg-gray-900 border border-gray-800 rounded-2xl shadow-lg overflow-hidden flex flex-col">
           <div className="p-6 border-b border-gray-800 flex justify-between items-center">
             <h2 className="text-lg font-bold text-white flex items-center gap-2">
@@ -185,23 +183,44 @@ export default function AdminDashboard() {
               {stats.affiliates} Paid / {stats.totalUsers} Total
             </span>
           </div>
-          <div className="p-6 space-y-8 flex-1">
-            <div>
-              <div className="flex justify-between text-sm mb-2">
-                <span className="text-gray-400">Direct Signups (No Referrer)</span>
-                <span className="font-bold text-white">{stats.directJoins}</span>
+          <div className="p-6 flex-1 flex flex-col justify-between">
+            <div className="space-y-6">
+              {/* standard growth bars */}
+              <div>
+                <div className="flex justify-between text-sm mb-2">
+                  <span className="text-gray-400">Direct Signups (No Referrer)</span>
+                  <span className="font-bold text-white">{stats.directJoins}</span>
+                </div>
+                <div className="w-full bg-gray-800 rounded-full h-2">
+                  <div className="bg-gray-500 h-2 rounded-full" style={{ width: stats.totalUsers > 0 ? `${(stats.directJoins / stats.totalUsers) * 100}%` : '0%' }}></div>
+                </div>
               </div>
-              <div className="w-full bg-gray-800 rounded-full h-2">
-                <div className="bg-gray-500 h-2 rounded-full" style={{ width: stats.totalUsers > 0 ? `${(stats.directJoins / stats.totalUsers) * 100}%` : '0%' }}></div>
+              <div>
+                <div className="flex justify-between text-sm mb-2">
+                  <span className="text-gray-400">Referred Signups (Affiliate Tree)</span>
+                  <span className="font-bold text-white">{stats.referredJoins}</span>
+                </div>
+                <div className="w-full bg-gray-800 rounded-full h-2">
+                  <div className="bg-purple-500 h-2 rounded-full" style={{ width: stats.totalUsers > 0 ? `${(stats.referredJoins / stats.totalUsers) * 100}%` : '0%' }}></div>
+                </div>
               </div>
             </div>
-            <div>
-              <div className="flex justify-between text-sm mb-2">
-                <span className="text-gray-400">Referred Signups (Affiliate Tree)</span>
-                <span className="font-bold text-white">{stats.referredJoins}</span>
+
+            {/* NEW: ELITE RANKS TRACKING */}
+            <div className="mt-8 pt-6 border-t border-gray-800 grid grid-cols-2 gap-4">
+              <div className="bg-gray-800/50 p-4 rounded-xl border border-gray-700/50">
+                <div className="flex items-center gap-2 mb-2">
+                  <Shield className="h-4 w-4 text-blue-400" />
+                  <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Admins</span>
+                </div>
+                <p className="text-2xl font-black text-white">{stats.totalAdmins}</p>
               </div>
-              <div className="w-full bg-gray-800 rounded-full h-2">
-                <div className="bg-purple-500 h-2 rounded-full" style={{ width: stats.totalUsers > 0 ? `${(stats.referredJoins / stats.totalUsers) * 100}%` : '0%' }}></div>
+              <div className="bg-gray-800/50 p-4 rounded-xl border border-yellow-900/30">
+                <div className="flex items-center gap-2 mb-2">
+                  <Crown className="h-4 w-4 text-yellow-500" />
+                  <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Founders</span>
+                </div>
+                <p className="text-2xl font-black text-yellow-500">{stats.totalFounders}</p>
               </div>
             </div>
           </div>
@@ -220,7 +239,7 @@ export default function AdminDashboard() {
           </div>
           <div className="flex-1 p-0 overflow-y-auto max-h-[300px]">
             {pendingWithdrawals.length === 0 ? (
-              <div className="p-10 flex flex-col items-center justify-center text-center">
+              <div className="p-10 flex flex-col items-center justify-center text-center h-full">
                 <CheckCircle className="h-10 w-10 text-gray-700 mb-3" />
                 <p className="text-gray-400 font-medium">All caught up!</p>
                 <p className="text-sm text-gray-600 mt-1">No pending withdrawal requests.</p>
