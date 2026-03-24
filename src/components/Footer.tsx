@@ -88,6 +88,9 @@ export default function Footer() {
               <span className="sr-only">Email LocalSoko at</span>
               hello@localsoko.com
             </a>
+            <Link href="/affiliatemrt" className="hover:text-emerald-600 hover:underline transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-200 rounded">
+                  Affiliate marketing
+            </Link>
           </div>
         </nav>
 
