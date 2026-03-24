@@ -90,7 +90,7 @@ export default function Navbar() {
                 <button
                   type="button"
                   onClick={handleLogout}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-red-200"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium bg-gray-300 text-gray-700 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-red-200"
                   aria-label="Sign out"
                 >
                   <LogOut className="h-4 w-4" />
@@ -105,7 +105,7 @@ export default function Navbar() {
                   aria-label="Sign in to LocalSoko"
                 >
                   <LogIn className="h-4 w-4" />
-                  <span className="hidden sm:inline">auth</span>
+                  <span className="hidden sm:inline">Sign In</span>
                 </Link>
               </div>
             )}

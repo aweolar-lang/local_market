@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { 
-  MapPin, Search, PackageOpen, Grid, Smartphone, Car, Sofa, Shirt, Briefcase, MessageCircle, Phone, X, Zap, Crown, Info
+  MapPin, Search, PackageOpen, Grid, Smartphone,BookOpen,ChevronRight, Car, Sofa, Shirt, Briefcase, MessageCircle, Phone, X, Zap, Crown, Info
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import SkeletonCard from "@/components/SkeletonCard";
@@ -180,25 +180,29 @@ export default function Home() {
               </div>
             </div>
             
-            <div className="p-6 bg-gray-50 text-center">
-  <div className="mb-6">
-    <Link 
-      href="/affiliatemrt" 
-      onClick={closePromoModal}
-      className="inline-flex items-center gap-2 text-sm font-bold text-indigo-600 hover:text-indigo-800 transition-colors group"
-    >
-      <div className="p-1.5 bg-indigo-100 rounded-lg group-hover:bg-indigo-200 transition-colors">
-        <Info className="h-4 w-4" />
+            <div className="p-6 bg-gray-50">
+  <Link 
+    href="/affiliatemrt" 
+    onClick={closePromoModal}
+    className="flex items-center justify-between p-4 mb-6 bg-white border border-gray-200 rounded-2xl hover:border-indigo-300 transition-all group"
+  >
+    <div className="flex items-center gap-3">
+      <div className="bg-indigo-50 p-2 rounded-xl">
+        <BookOpen className="h-5 w-5 text-indigo-600" />
       </div>
-      Read the Step-by-Step Guide
-    </Link>
-  </div>
+      <div className="text-left">
+        <p className="text-xs font-bold text-gray-400 uppercase tracking-tight">New to this?</p>
+        <p className="text-sm font-bold text-gray-900">View Affiliate Guide</p>
+      </div>
+    </div>
+    <ChevronRight className="h-5 w-5 text-gray-300 group-hover:text-indigo-500 transition-colors" />
+  </Link>
 
-  <Link href="/affiliate" onClick={closePromoModal} className="block w-full bg-black hover:bg-gray-800 text-white font-bold py-4 rounded-xl transition-all shadow-md">
+  <Link href="/affiliate" onClick={closePromoModal} className="block w-full bg-black hover:bg-gray-800 text-white font-bold py-4 rounded-xl transition-all shadow-md text-center">
     Claim Your Affiliate Link
   </Link>
   
-  <button onClick={closePromoModal} className="mt-4 text-sm text-gray-400 hover:text-gray-600 font-medium">
+  <button onClick={closePromoModal} className="block w-full mt-4 text-center text-sm text-gray-400 hover:text-gray-600 font-medium">
     No thanks, I just want to shop
   </button>
 </div>
