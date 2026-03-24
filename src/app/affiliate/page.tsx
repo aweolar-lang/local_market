@@ -62,8 +62,7 @@ const SmartTransactionDescription = ({ description }: { description: string }) =
 
     translateDescription();
   }, [description]);
-
-  return <span className="text-gray-300">{cleanText}</span>;
+  return <span className="text-sm font-bold text-gray-900 truncate">{cleanText}</span>;
 };
 
 export default function AffiliatePage() {
