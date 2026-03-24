@@ -44,7 +44,7 @@ export default function SellItemPage() {
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        router.push("/login");
+        router.push("/auth");
       } else {
         setUser(session.user);
       }

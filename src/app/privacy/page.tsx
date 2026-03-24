@@ -63,7 +63,7 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-xl font-bold text-gray-900 mb-3">5. Data Security</h2>
             <p>
-              We implement industry-standard security measures to protect your personal information from unauthorized access, alteration, disclosure, or destruction. However, please be aware that no method of transmission over the internet or electronic storage is 100% secure. You are responsible for keeping your login credentials confidential.
+              We implement industry-standard security measures to protect your personal information from unauthorized access, alteration, disclosure, or destruction. However, please be aware that no method of transmission over the internet or electronic storage is 100% secure. You are responsible for keeping your auth credentials confidential.
             </p>
           </section>
 

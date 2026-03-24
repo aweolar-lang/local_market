@@ -181,22 +181,27 @@ export default function Home() {
             </div>
             
             <div className="p-6 bg-gray-50 text-center">
-              <div className="flex justify-center gap-4 mb-6">
-                <div className="bg-white p-3 rounded-xl shadow-sm border border-gray-100 w-24">
-                  <p className="text-xs text-gray-500 font-bold uppercase mb-1">Guide</p>
-                   <a href="/affiliatemrt" className="text-sm font-bold text-blue-600 hover:underline flex items-center justify-center gap-1" onClick={closePromoModal}>
-                    <Info className="h-4 w-4" aria-hidden="true" />
-                     Learn More
-                  </a>
-                </div>
-              </div>
-              <Link href="/affiliate" onClick={closePromoModal} className="block w-full bg-black hover:bg-gray-800 text-white font-bold py-4 rounded-xl transition-all shadow-md">
-                Claim Your Affiliate Link
-              </Link>
-              <button onClick={closePromoModal} className="mt-4 text-sm text-gray-500 hover:text-gray-800 font-medium">
-                No thanks, I just want to shop
-              </button>
-            </div>
+  <div className="mb-6">
+    <Link 
+      href="/affiliatemrt" 
+      onClick={closePromoModal}
+      className="inline-flex items-center gap-2 text-sm font-bold text-indigo-600 hover:text-indigo-800 transition-colors group"
+    >
+      <div className="p-1.5 bg-indigo-100 rounded-lg group-hover:bg-indigo-200 transition-colors">
+        <Info className="h-4 w-4" />
+      </div>
+      Read the Step-by-Step Guide
+    </Link>
+  </div>
+
+  <Link href="/affiliate" onClick={closePromoModal} className="block w-full bg-black hover:bg-gray-800 text-white font-bold py-4 rounded-xl transition-all shadow-md">
+    Claim Your Affiliate Link
+  </Link>
+  
+  <button onClick={closePromoModal} className="mt-4 text-sm text-gray-400 hover:text-gray-600 font-medium">
+    No thanks, I just want to shop
+  </button>
+</div>
           </div>
         </div>
       )}

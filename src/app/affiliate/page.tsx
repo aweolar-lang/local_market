@@ -181,7 +181,7 @@ export default function AffiliatePage() {
 
   const copyToClipboard = () => {
     if (!stats || !isAffiliate) return;
-    navigator.clipboard.writeText(`${siteUrl}/login?ref=${stats.referral_code}`);
+    navigator.clipboard.writeText(`${siteUrl}/auth?ref=${stats.referral_code}`);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -325,7 +325,7 @@ export default function AffiliatePage() {
                   </div>
                   <p className="text-gray-500 text-sm mb-6">Share this link. Earn commissions passively when your friends join and invite others.</p>
                   <div className="flex bg-gray-50 border border-gray-200 rounded-xl p-2 shadow-inner">
-                    <input readOnly value={`${siteUrl}/login?ref=${stats?.referral_code}`} className="bg-transparent flex-1 px-4 text-sm outline-none font-medium text-gray-700" />
+                    <input readOnly value={`${siteUrl}/auth?ref=${stats?.referral_code}`} className="bg-transparent flex-1 px-4 text-sm outline-none font-medium text-gray-700" />
                     <button onClick={copyToClipboard} className="bg-black hover:bg-gray-800 text-white px-6 py-3 rounded-lg text-sm font-bold flex items-center gap-2 transition-colors">
                       {copied ? <><Check className="h-4 w-4"/> Copied!</> : <><Copy className="h-4 w-4"/> Copy Link</>}
                     </button>

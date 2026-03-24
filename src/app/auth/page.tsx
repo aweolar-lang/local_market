@@ -44,7 +44,7 @@ function AuthForm() {
         setMessage({ type: 'error', text: error.message });
       } else {
         toast.success("Success! Check your email to confirm your account.");
-        window.location.href = "/login";
+        window.location.href = "/auth";
       }
     } else {
       // --- LOGIN LOGIC ---

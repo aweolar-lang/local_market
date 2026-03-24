@@ -90,22 +90,22 @@ export default function Navbar() {
                 <button
                   type="button"
                   onClick={handleLogout}
-                  className="flex items-center gap-1.5 text-sm font-medium text-white bg-red-500 hover:bg-red-600 transition-colors focus:outline-none focus:ring-2 focus:ring-red-200 rounded"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-red-200"
                   aria-label="Sign out"
                 >
                   <LogOut className="h-4 w-4" />
-                  <span className="hidden sm:inline">Logout</span>
+                      <span className="hidden sm:inline">Logout</span>
                 </button>
               </div>
             ) : (
               <div className="flex items-center gap-3 border-l border-gray-200 pl-4 ml-1 sm:ml-2">
                 <Link
-                  href="/login"
+                  href="/auth"
                   className="inline-flex items-center gap-1.5 bg-gray-900 hover:bg-black text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-300"
                   aria-label="Sign in to LocalSoko"
                 >
                   <LogIn className="h-4 w-4" />
-                  <span className="hidden sm:inline">Login</span>
+                  <span className="hidden sm:inline">auth</span>
                 </Link>
               </div>
             )}
