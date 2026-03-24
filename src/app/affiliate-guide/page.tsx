@@ -3,7 +3,7 @@ import {
   BookOpen, Link as LinkIcon, DollarSign, Users, 
   ShieldAlert, LifeBuoy, TrendingUp, AlertTriangle,
   Store, Smartphone, RefreshCw, CheckCircle2, XCircle, 
-  Scale, MessageSquare
+  Scale, MessageSquare, Network
 } from "lucide-react";
 
 export default function AffiliateGuidePage() {
@@ -27,7 +27,7 @@ export default function AffiliateGuidePage() {
           </p>
         </div>
 
-        {/* SECTION 1: THE ECOSYSTEM (CONNECTING MARKET & AFFILIATE) */}
+        {/* SECTION 1: THE ECOSYSTEM */}
         <section className="bg-gray-900 border border-gray-800 rounded-3xl p-8 md:p-10 shadow-2xl relative overflow-hidden">
           <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none">
             <Store className="h-64 w-64" />
@@ -54,55 +54,90 @@ export default function AffiliateGuidePage() {
           </div>
         </section>
 
-        {/* SECTION 2: THE STEP-BY-STEP EARNING GUIDE */}
+        {/* SECTION 2: THE 3-TIER COMMISSION GUIDE */}
         <section className="space-y-8">
           <h2 className="text-3xl font-black text-white flex items-center gap-4 px-2">
             <DollarSign className="h-8 w-8 text-emerald-400" />
             2. The Blueprint: How to Earn
           </h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Step 1 */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <div className="bg-gray-900 border border-gray-800 rounded-2xl p-8 hover:border-emerald-500/30 transition-colors">
               <div className="bg-gray-800 w-12 h-12 rounded-full flex items-center justify-center mb-6 border border-gray-700">
                 <span className="text-xl font-black text-emerald-400">1</span>
               </div>
               <h3 className="text-2xl font-bold text-white mb-3">Activate Your Account</h3>
               <p className="text-gray-400 leading-relaxed">
-                To become a verified partner, you must pay a one-time activation fee of <strong>Ksh 400</strong> via our secure M-Pesa STK push. This filters out spam bots, shows commitment, and funds the reward pool that pays you.
+                To become a verified partner, you must pay a one-time activation fee of <strong>Ksh 400</strong> via our secure M-Pesa STK push. This filters out spam bots, shows commitment, and funds the reward pool.
               </p>
             </div>
 
-            {/* Step 2 */}
             <div className="bg-gray-900 border border-gray-800 rounded-2xl p-8 hover:border-blue-500/30 transition-colors">
               <div className="bg-gray-800 w-12 h-12 rounded-full flex items-center justify-center mb-6 border border-gray-700">
                 <span className="text-xl font-black text-blue-400">2</span>
               </div>
               <h3 className="text-2xl font-bold text-white mb-3">Get Your Link</h3>
               <p className="text-gray-400 leading-relaxed">
-                Once activated, your dashboard instantly unlocks. You will be assigned a unique Referral Code (e.g., <code className="text-blue-400 bg-blue-400/10 px-2 py-1 rounded">REF-ABC123</code>) and a shareable link perfectly tied to your account.
+                Once activated, your dashboard instantly unlocks your unique Referral Code and a shareable link perfectly tied to your account.
               </p>
             </div>
+          </div>
 
-            {/* Step 3 */}
-            <div className="bg-gray-900 border border-gray-800 rounded-2xl p-8 hover:border-purple-500/30 transition-colors">
-              <div className="bg-gray-800 w-12 h-12 rounded-full flex items-center justify-center mb-6 border border-gray-700">
-                <span className="text-xl font-black text-purple-400">3</span>
-              </div>
-              <h3 className="text-2xl font-bold text-white mb-3">Share & Invite</h3>
-              <p className="text-gray-400 leading-relaxed">
-                Share your link on WhatsApp status, Facebook groups, TikTok, or directly with friends. Tell them about the marketplace and how they can buy/sell locally. When they click your link, our system remembers you sent them.
-              </p>
+          {/* THE 3-TIER BREAKDOWN */}
+          <div className="bg-gray-900 border border-emerald-900/50 rounded-3xl p-8 md:p-10 shadow-2xl relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none">
+              <Network className="h-64 w-64 text-emerald-500" />
             </div>
+            
+            <h3 className="text-2xl font-black text-white mb-6 relative z-10 flex items-center gap-3">
+              <Users className="h-7 w-7 text-emerald-400" />
+              The 3-Level Multiplier Effect
+            </h3>
+            <p className="text-gray-400 mb-8 relative z-10 text-lg">
+              We don't just pay you for your direct invites. We pay you when your invites invite others! Here is how the 3-Tier Commission Structure works every time someone in your network activates for Ksh 400:
+            </p>
 
-            {/* Step 4 */}
-            <div className="bg-gray-900 border border-gray-800 rounded-2xl p-8 hover:border-orange-500/30 transition-colors">
-              <div className="bg-gray-800 w-12 h-12 rounded-full flex items-center justify-center mb-6 border border-gray-700">
-                <span className="text-xl font-black text-orange-400">4</span>
+            <div className="space-y-4 relative z-10">
+              {/* Tier 1 */}
+              <div className="bg-gray-950/80 border border-gray-800 rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div>
+                  <h4 className="text-xl font-bold text-emerald-400 mb-1">Level 1 (Direct)</h4>
+                  <p className="text-sm text-gray-400">You invite John. John pays Ksh 400.</p>
+                </div>
+                <div className="text-right">
+                  <span className="text-2xl font-black text-white">Ksh 150</span>
+                  <p className="text-xs text-emerald-500 font-bold uppercase tracking-wide">Instant Payout</p>
+                </div>
               </div>
-              <h3 className="text-2xl font-bold text-white mb-3">Instant Commissions</h3>
-              <p className="text-gray-400 leading-relaxed">
-                Every time someone registers via your link and activates their own account, <strong>Ksh 200</strong> is instantly credited to your wallet. Our real-time ledger updates your balance immediately—no waiting, no hidden math.
+
+              {/* Tier 2 */}
+              <div className="bg-gray-950/80 border border-gray-800 rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div>
+                  <h4 className="text-xl font-bold text-blue-400 mb-1">Level 2 (Indirect)</h4>
+                  <p className="text-sm text-gray-400">John invites Sarah. Sarah pays Ksh 400.</p>
+                </div>
+                <div className="text-right">
+                  <span className="text-2xl font-black text-white">Ksh 100</span>
+                  <p className="text-xs text-blue-500 font-bold uppercase tracking-wide">Passive Income</p>
+                </div>
+              </div>
+
+              {/* Tier 3 */}
+              <div className="bg-gray-950/80 border border-gray-800 rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div>
+                  <h4 className="text-xl font-bold text-purple-400 mb-1">Level 3 (Deep Network)</h4>
+                  <p className="text-sm text-gray-400">Sarah invites Mike. Mike pays Ksh 400.</p>
+                </div>
+                <div className="text-right">
+                  <span className="text-2xl font-black text-white">Ksh 50</span>
+                  <p className="text-xs text-purple-500 font-bold uppercase tracking-wide">Passive Income</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="mt-8 p-4 bg-emerald-950/30 border border-emerald-900/50 rounded-xl">
+              <p className="text-emerald-200 text-sm text-center">
+                <strong>Pro-Tip:</strong> Train your Level 1 referrals how to market the platform! When they succeed, you earn Level 2 and Level 3 commissions while you sleep.
               </p>
             </div>
           </div>
@@ -117,19 +152,19 @@ export default function AffiliateGuidePage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="flex gap-3 items-start">
               <CheckCircle2 className="h-6 w-6 text-emerald-500 shrink-0 mt-0.5" />
-              <p className="text-gray-300 text-sm md:text-base"><strong className="text-white">Pitch the Market:</strong> Don't just spam your link. Tell people *why* they should join: "Hey, I found a great local platform to sell your old phone or buy cheap electronics. Check it out!"</p>
+              <p className="text-gray-300 text-sm md:text-base"><strong className="text-white">Pitch the Market:</strong> Don't just spam your link. Tell people *why* they should join to buy or sell items locally.</p>
             </div>
             <div className="flex gap-3 items-start">
               <CheckCircle2 className="h-6 w-6 text-emerald-500 shrink-0 mt-0.5" />
-              <p className="text-gray-300 text-sm md:text-base"><strong className="text-white">Use WhatsApp:</strong> WhatsApp Status is the highest converting tool for our top earners. Post screenshots of your withdrawal receipts to build trust.</p>
+              <p className="text-gray-300 text-sm md:text-base"><strong className="text-white">Use WhatsApp:</strong> WhatsApp Status is the highest converting tool. Post screenshots of your withdrawal receipts to build trust.</p>
             </div>
             <div className="flex gap-3 items-start">
               <CheckCircle2 className="h-6 w-6 text-emerald-500 shrink-0 mt-0.5" />
-              <p className="text-gray-300 text-sm md:text-base"><strong className="text-white">Help Them Activate:</strong> Sometimes people register but don't pay the Ksh 400. Follow up with your friends and walk them through the M-Pesa prompt.</p>
+              <p className="text-gray-300 text-sm md:text-base"><strong className="text-white">Help Them Activate:</strong> Follow up with your friends and walk them through the M-Pesa prompt if they get stuck.</p>
             </div>
             <div className="flex gap-3 items-start">
               <CheckCircle2 className="h-6 w-6 text-emerald-500 shrink-0 mt-0.5" />
-              <p className="text-gray-300 text-sm md:text-base"><strong className="text-white">Consistency Wins:</strong> Affiliate marketing is a numbers game. The more eyes on your link, the more passive income you generate while you sleep.</p>
+              <p className="text-gray-300 text-sm md:text-base"><strong className="text-white">Build Your Downline:</strong> Remember the 3-Tier system. Help your referrals get their own referrals!</p>
             </div>
           </div>
         </section>
@@ -138,11 +173,11 @@ export default function AffiliateGuidePage() {
         <section className="bg-red-950/20 border border-red-900/50 rounded-3xl p-8 md:p-10 shadow-lg">
           <h2 className="text-3xl font-black text-red-500 flex items-center gap-4 mb-8">
             <Scale className="h-8 w-8 text-red-500" />
-            3. Strict Rules, Terms & Privacy Warnings
+            3. Strict Rules & Terms
           </h2>
           
           <p className="text-red-200/80 mb-8 text-lg">
-            To protect the integrity of the marketplace and ensure fair play for all affiliates, we enforce strict rules. By participating in this program, you agree to the following terms:
+            By participating in this program, you agree to the following terms to protect the integrity of the marketplace:
           </p>
 
           <div className="space-y-6">
@@ -151,57 +186,38 @@ export default function AffiliateGuidePage() {
                 <XCircle className="h-5 w-5" /> 1. No Spam or Deceptive Marketing
               </h4>
               <p className="text-gray-400 text-sm leading-relaxed">
-                You may not promote your link using false promises (e.g., "Click here for free money"). You may not spam unsolicited emails or flood comment sections. Deceptive marketing damages the marketplace brand and will result in <strong>immediate account termination and forfeiture of all pending wallet funds.</strong>
+                You may not promote your link using false promises. Deceptive marketing damages the marketplace brand and will result in <strong>immediate account termination.</strong>
               </p>
             </div>
 
             <div className="bg-gray-950/50 p-6 rounded-2xl border border-red-900/30">
               <h4 className="text-red-400 font-bold text-lg mb-2 flex items-center gap-2">
-                <ShieldAlert className="h-5 w-5" /> 2. Independent Contractor Status
+                <AlertTriangle className="h-5 w-5" /> 2. Marketplace Liability
               </h4>
               <p className="text-gray-400 text-sm leading-relaxed">
-                As an affiliate, you are an independent promoter. You are <strong>not</strong> an employee, legal agent, or corporate partner of our platform. You are responsible for your own taxes and marketing expenses.
-              </p>
-            </div>
-
-            <div className="bg-gray-950/50 p-6 rounded-2xl border border-red-900/30">
-              <h4 className="text-red-400 font-bold text-lg mb-2 flex items-center gap-2">
-                <AlertTriangle className="h-5 w-5" /> 3. Marketplace Liability & Risk
-              </h4>
-              <p className="text-gray-400 text-sm leading-relaxed">
-                The core platform is a peer-to-peer marketplace. While we provide a secure system, <strong>transactions between buyers and sellers are conducted at their own risk.</strong> As an affiliate, you are not liable for marketplace disputes between users you referred, nor is the platform liable for private trades gone wrong. Always advise your referrals to meet in safe, public places when exchanging goods.
-              </p>
-            </div>
-
-            <div className="bg-gray-950/50 p-6 rounded-2xl border border-red-900/30">
-              <h4 className="text-red-400 font-bold text-lg mb-2 flex items-center gap-2">
-                <Store className="h-5 w-5" /> 4. Withdrawals & Payouts
-              </h4>
-              <p className="text-gray-400 text-sm leading-relaxed">
-                Wallet funds are generated exclusively through successful network activations. Withdrawals are processed directly to the M-Pesa number registered on your account. Standard Safaricom transaction fees and platform withdrawal minimums may apply. The system is heavily monitored for self-referral fraud.
+                The core platform is a peer-to-peer marketplace. <strong>Transactions between buyers and sellers are conducted at their own risk.</strong>
               </p>
             </div>
           </div>
         </section>
 
-        {/* SECTION 5: SUPPORT & CONTACT (MAIN SITE REDIRECT) */}
+        {/* SECTION 5: SUPPORT */}
         <section className="bg-gray-900 border border-gray-800 rounded-3xl p-8 md:p-12 text-center shadow-2xl">
           <div className="inline-flex items-center justify-center p-4 bg-blue-500/10 rounded-full mb-6">
             <LifeBuoy className="h-12 w-12 text-blue-400" />
           </div>
-          <h2 className="text-3xl font-black text-white mb-4">Need Help or Support?</h2>
+          <h2 className="text-3xl font-black text-white mb-4">Need Help?</h2>
           <p className="text-gray-400 mb-8 max-w-2xl mx-auto text-lg">
-            Whether you are struggling to set up your account, have questions about a withdrawal, or need help navigating the main e-commerce marketplace, our official Support Team is ready to assist you.
+            Whether you need help with a withdrawal or navigating the main e-commerce marketplace, our Support Team is here.
           </p>
           
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            {/* Note: Adjust the href="/contact" to point to your main site's actual contact page if it's hosted on a different domain! */}
             <Link 
               href="/contact" 
-              className="w-full sm:w-auto flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 px-8 rounded-xl transition-all hover:scale-105 hover:shadow-[0_0_20px_rgba(37,99,235,0.4)]"
+              className="w-full sm:w-auto flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 px-8 rounded-xl transition-all hover:scale-105"
             >
               <MessageSquare className="h-5 w-5" />
-              Contact the Main Support Team
+              Contact Support
             </Link>
             
             <Link 
@@ -212,13 +228,6 @@ export default function AffiliateGuidePage() {
             </Link>
           </div>
         </section>
-
-        {/* Footer tiny text */}
-        <div className="text-center pb-8 pt-4">
-          <p className="text-gray-600 text-sm font-mono">
-            LocalSoko Affiliate Network • Terms updated as of {new Date().getFullYear()}
-          </p>
-        </div>
 
       </div>
     </div>
