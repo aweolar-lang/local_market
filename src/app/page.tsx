@@ -182,7 +182,7 @@ export default function Home() {
             
             <div className="p-6 bg-gray-50">
   <Link 
-    href="/affiliatemrt" 
+    href="/affiliate-guide" 
     onClick={closePromoModal}
     className="flex items-center justify-between p-4 mb-6 bg-white border border-gray-200 rounded-2xl hover:border-indigo-300 transition-all group"
   >
@@ -198,7 +198,7 @@ export default function Home() {
     <ChevronRight className="h-5 w-5 text-gray-300 group-hover:text-indigo-500 transition-colors" />
   </Link>
 
-  <Link href="/affiliate-guide" onClick={closePromoModal} className="block w-full bg-black hover:bg-gray-800 text-white font-bold py-4 rounded-xl transition-all shadow-md text-center">
+  <Link href="/affiliate" onClick={closePromoModal} className="block w-full bg-black hover:bg-gray-800 text-white font-bold py-4 rounded-xl transition-all shadow-md text-center">
     Claim Your Affiliate Link
   </Link>
   
