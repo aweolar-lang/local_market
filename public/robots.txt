@@ -1,0 +1,9 @@
+# *
+User-agent: *
+Allow: /
+
+# Host
+Host: https://localsoko.com
+
+# Sitemaps
+Sitemap: https://localsoko.com/sitemap.xml
