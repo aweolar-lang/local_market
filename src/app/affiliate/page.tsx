@@ -21,6 +21,51 @@ interface AffiliateStats {
   phone_number?: string;
 }
 
+const SmartTransactionDescription = ({ description }: { description: string }) => {
+  const [cleanText, setCleanText] = useState("Loading details...");
+
+  useEffect(() => {
+    const translateDescription = async () => {
+      let text = description;
+
+      if (text.includes("Refund: Transfer Failed") || text.includes("customer type")) {
+        setCleanText("Refund: M-Pesa Transfer Failed");
+        return;
+      }
+
+      const phoneMatch = text.match(/(254\d{9})/);
+      if (phoneMatch) {
+        const phone = phoneMatch[1];
+        const masked = `+254 ${phone.slice(3, 6)} *** ${phone.slice(-3)}`;
+        text = text.replace(phone, masked);
+      }
+
+      const uuidMatch = text.match(/\(Activated by:\s*([a-f0-9\-]+)\)/i);
+      if (uuidMatch) {
+        const userId = uuidMatch[1];
+        
+        const { data } = await supabase
+          .from("profiles")
+          .select("username")
+          .eq("id", userId)
+          .single();
+
+        if (data?.username) {
+          text = text.replace(`(Activated by: ${userId})`, `(from @${data.username})`);
+        } else {
+          text = text.replace(`(Activated by: ${userId})`, `(from network)`);
+        }
+      }
+
+      setCleanText(text);
+    };
+
+    translateDescription();
+  }, [description]);
+
+  return <span className="text-gray-300">{cleanText}</span>;
+};
+
 export default function AffiliatePage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
@@ -355,9 +400,9 @@ export default function AffiliatePage() {
                                 {txn.amount > 0 ? <TrendingUp className="h-5 w-5" /> : <ArrowDownRight className="h-5 w-5" />}
                               </div>
                               <div>
-                                <p className="text-sm font-bold text-gray-900 truncate">
-                                  {txn.description}
-                                </p>
+                              {/* Find this part in your code: */}
+                              <SmartTransactionDescription description={txn.description} />
+                              
                                 <p className="text-xs text-gray-500 mt-1">
                                   {new Date(txn.created_at).toLocaleDateString()}
                                 </p>
