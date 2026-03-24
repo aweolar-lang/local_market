@@ -4,6 +4,7 @@ import { useState, Suspense } from "react";
 import { supabase } from "@/lib/supabase";
 import { Mail, Lock, AlertCircle, User as UserIcon, Phone } from "lucide-react";
 import { useSearchParams } from "next/navigation"; 
+import { toast } from "sonner";
 
 function AuthForm() {
   // Add a state to toggle between Login and Sign Up views
@@ -42,7 +43,7 @@ function AuthForm() {
       if (error) {
         setMessage({ type: 'error', text: error.message });
       } else {
-        setMessage({ type: 'success', text: "Success! Check your email to confirm your account." });
+        toast.success("Success! Check your email to confirm your account.");
         window.location.href = "/login";
       }
     } else {
