@@ -7,6 +7,7 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { User } from "@supabase/supabase-js";
 import { Trash2, CheckCircle, Package, Loader2, ExternalLink, Smartphone, X, TrendingUp } from "lucide-react";
+import { useUser } from "@/hooks/useUser";
 
 interface Item {
   id: string;
@@ -31,6 +32,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [invitesCount, setInvitesCount] = useState(0);
+   const { profile: secureProfile, user: authUser, loading: profileLoading } = useUser();
 
   // M-Pesa Modal States
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -38,49 +40,37 @@ export default function DashboardPage() {
   const [paymentStatus, setPaymentStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [paymentMessage, setPaymentMessage] = useState("");
 
+
   useEffect(() => {
     const fetchUserAndItems = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        router.push("/login");
-        return;
-      }
-      setUser(session.user);
+      if (!secureProfile || !authUser) return;
+
+      setUser(authUser);
 
       const { data: itemsData } = await supabase
         .from("items")
         .select("*")
-        .eq("seller_id", session.user.id)
+        .eq("seller_id", secureProfile.id)
         .order("created_at", { ascending: false });
+        
       if (itemsData) setItems(itemsData as Item[]);
 
-      // Fetch Profile and Invites
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select("is_affiliate, referral_code, wallet_balance")
-        .eq("id", session.user.id)
-        .maybeSingle();
-        
-      if (profileData) {
-        setProfile(profileData);
-        
-        // If they are an affiliate, quickly count their invites!
-        if (profileData.is_affiliate) {
-          const { count } = await supabase
-            .from("profiles")
-            .select("*", { count: 'exact', head: true })
-            .eq("referred_by", session.user.id);
-            
-          setInvitesCount(count || 0);
-        }
+      setProfile(secureProfile);
+
+      if (secureProfile.is_affiliate) {
+        const { count } = await supabase
+          .from("profiles")
+          .select("*", { count: 'exact', head: true })
+          .eq("referred_by", secureProfile.id);
+          
+        setInvitesCount(count || 0);
       }
 
       setLoading(false);
     };
 
     fetchUserAndItems();
-  }, [router]);
-
+  }, [secureProfile, authUser]);
   const handleMpesaSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setPaymentStatus('loading');

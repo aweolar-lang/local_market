@@ -14,9 +14,24 @@ export async function POST(req: Request) {
     const body = await req.json();
     const callbackData = body.Body.stkCallback;
 
-    if (callbackData.ResultCode === 0 && userId) {
+    if (!userId) {
+      return NextResponse.json({ ResultCode: 0, ResultDesc: "Missing userId" });
+    }
+
+    if (callbackData.ResultCode !== 0) {
+      console.log(`Payment failed for ${userId}: ${callbackData.ResultDesc}`);
       
-      // 🚨 NEW FIX: CHECK IF ALREADY PROCESSED TO PREVENT SAFARICOM RETRY BUGS
+      // Unlock the account so they can try again!
+      await supabaseAdmin
+        .from('profiles')
+        .update({ mpesa_payment_status: 'idle' })
+        .eq('id', userId);
+
+      return NextResponse.json({ ResultCode: 0, ResultDesc: "Success" });
+    }
+
+    if (callbackData.ResultCode === 0) {
+      
       const { data: existingProfile } = await supabaseAdmin
         .from('profiles')
         .select('is_affiliate')
@@ -25,16 +40,18 @@ export async function POST(req: Request) {
 
       if (existingProfile?.is_affiliate) {
         console.log("Safaricom Retry Detected. User is already an affiliate. Skipping.");
-        // Return success so Safaricom stops retrying!
+        await supabaseAdmin.from('profiles').update({ mpesa_payment_status: 'success' }).eq('id', userId);
         return NextResponse.json({ ResultCode: 0, ResultDesc: "Success" });
       }
+
       const referralCode = `REF-${userId.substring(0, 8).toUpperCase()}`;
 
       const { error: updateError } = await supabaseAdmin
         .from('profiles')
         .update({ 
           is_affiliate: true,
-          referral_code: referralCode
+          referral_code: referralCode,
+          mpesa_payment_status: 'success'
         })
         .eq('id', userId);
 

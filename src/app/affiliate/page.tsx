@@ -9,6 +9,7 @@ import {
   Smartphone, Loader2, Lock, Crown, Star, ShieldCheck, 
   Zap, ShieldAlert, ArrowDownRight 
 } from "lucide-react";
+import { useUser } from "@/hooks/useUser";
 
 interface AffiliateStats {
   username: string;
@@ -28,6 +29,7 @@ export default function AffiliatePage() {
   const [stats, setStats] = useState<AffiliateStats | null>(null);
   const [copied, setCopied] = useState(false);
   const [siteUrl, setSiteUrl] = useState("");
+  const { profile: secureProfile, user: authUser, loading: profileLoading } = useUser();
 
   // Payment & Withdrawal States
   const [phoneInput, setPhoneInput] = useState("");
@@ -41,55 +43,44 @@ export default function AffiliatePage() {
   // Ledger State
   const [transactions, setTransactions] = useState<any[]>([]);
 
-  useEffect(() => {
+ useEffect(() => {
     setSiteUrl(window.location.origin);
+
     const fetchData = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        router.push("/login");
-        return;
-      }
-      setUserId(session.user.id);
+      if (!secureProfile || !authUser) return;
 
-      // Fetch Profile Data
-      const { data: profile } = await supabase
+      setUserId(secureProfile.id);
+      setIsAffiliate(secureProfile.is_affiliate);
+
+      const { count } = await supabase
         .from("profiles")
-        .select("username, is_admin, is_affiliate, referral_code, wallet_balance, is_founder, phone_number")
-        .eq("id", session.user.id)
-        .single();
+        .select("*", { count: 'exact', head: true })
+        .eq("referred_by", secureProfile.id);
 
-      if (profile) {
-        setIsAffiliate(profile.is_affiliate);
-        
-        const { count } = await supabase
-          .from("profiles")
-          .select("*", { count: 'exact', head: true })
-          .eq("referred_by", session.user.id);
+      setStats({
+        username: secureProfile.username || "Partner",
+        referral_code: secureProfile.referral_code || "LOCKED",
+        wallet_balance: secureProfile.wallet_balance || 0,
+        total_invites: count || 0,
+        is_founder: secureProfile.is_founder || false,
+        is_admin: secureProfile.is_admin || false,
+        phone_number: secureProfile.phone_number || "No phone registered",
+      });
 
-        setStats({
-          username: profile.username || "Partner",
-          referral_code: profile.referral_code || "LOCKED",
-          wallet_balance: profile.wallet_balance || 0,
-          total_invites: count || 0,
-          is_founder: profile.is_founder || false,
-          is_admin: profile.is_admin || false,
-          phone_number: profile.phone_number || "No phone registered",
-        });
+      const { data: txns } = await supabase
+        .from("transactions")
+        .select("*")
+        .eq("user_id", secureProfile.id)
+        .order("created_at", { ascending: false })
+        .limit(20);
 
-        // Fetch Ledger Transactions
-        const { data: txns } = await supabase
-          .from("transactions")
-          .select("*")
-          .eq("user_id", session.user.id)
-          .order("created_at", { ascending: false })
-          .limit(20);
-
-        if (txns) setTransactions(txns);
-      }
+      if (txns) setTransactions(txns);
+      
       setLoading(false);
     };
+
     fetchData();
-  }, [router]);
+  }, [secureProfile, authUser]);
 
   // AUTO-VERIFY MPESA PAYMENT
   useEffect(() => {

@@ -8,11 +8,13 @@ import {
   Activity, Clock, Landmark, CheckCircle, ListOrdered, UserCheck,
   Shield, Crown
 } from "lucide-react";
+import { useUser } from "@/hooks/useUser";
 
 export default function AdminDashboard() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [isAuthorized, setIsAuthorized] = useState(false);
+  const { profile: secureProfile, user: authUser, loading: profileLoading } = useUser();
   
   const [stats, setStats] = useState({
     totalUsers: 0,
@@ -31,8 +33,17 @@ export default function AdminDashboard() {
   const [ledgerEntries, setLedgerEntries] = useState<any[]>([]);
 
   useEffect(() => {
+    if (!secureProfile || !authUser) return;
+
+    if (secureProfile.is_admin !== true) {
+      console.warn("Unauthorized access. Redirecting to dashboard.");
+      router.push("/dashboard");
+      return;
+    }
+
     checkAdminStatusAndLoadData();
-  }, []);
+    
+  }, [secureProfile, authUser, router]);
 
   const checkAdminStatusAndLoadData = async () => {
     const { data: { session } } = await supabase.auth.getSession();
