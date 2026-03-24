@@ -82,7 +82,7 @@ export async function POST(req: Request) {
         Password: password,
         Timestamp: timestamp,
         TransactionType: "CustomerPayBillOnline",
-        Amount: 10, // The Affiliate Activation Fee
+        Amount: 5, // The Affiliate Activation Fee
         PartyA: formattedPhone,
         PartyB: shortcode,
         PhoneNumber: formattedPhone,
