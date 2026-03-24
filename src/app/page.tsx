@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { 
-  MapPin, Search, PackageOpen, Grid, Smartphone, Car, Sofa, Shirt, Briefcase, MessageCircle, Phone, X, Zap, Crown
+  MapPin, Search, PackageOpen, Grid, Smartphone, Car, Sofa, Shirt, Briefcase, MessageCircle, Phone, X, Zap, Crown, Info
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import SkeletonCard from "@/components/SkeletonCard";
@@ -176,19 +176,18 @@ export default function Home() {
                   <Zap className="h-8 w-8 text-yellow-900" />
                 </div>
                 <h2 className="text-3xl font-black text-white mb-2">Turn your influence into <span className="text-green-400">Cash!</span></h2>
-                <p className="text-gray-300 text-sm">Join the LocalSoko Partner Hub and earn a massive 3-tier commission every time your friends join.</p>
+                <p className="text-gray-300 text-sm">Join the LocalSoko Partner Hub and earn a massive commission every time your friends join.</p>
               </div>
             </div>
             
             <div className="p-6 bg-gray-50 text-center">
               <div className="flex justify-center gap-4 mb-6">
                 <div className="bg-white p-3 rounded-xl shadow-sm border border-gray-100 w-24">
-                  <p className="text-xs text-gray-500 font-bold uppercase mb-1">Level 1</p>
-                  <p className="text-lg font-black text-green-600">Ksh 150</p>
-                </div>
-                <div className="bg-white p-3 rounded-xl shadow-sm border border-gray-100 w-24">
-                  <p className="text-xs text-gray-500 font-bold uppercase mb-1">Level 2</p>
-                  <p className="text-lg font-black text-blue-600">Ksh 100</p>
+                  <p className="text-xs text-gray-500 font-bold uppercase mb-1">Guide</p>
+                   <a href="/affiliatemrt" className="text-sm font-bold text-blue-600 hover:underline flex items-center justify-center gap-1" onClick={closePromoModal}>
+                    <Info className="h-4 w-4" aria-hidden="true" />
+                     Learn More
+                  </a>
                 </div>
               </div>
               <Link href="/affiliate" onClick={closePromoModal} className="block w-full bg-black hover:bg-gray-800 text-white font-bold py-4 rounded-xl transition-all shadow-md">
