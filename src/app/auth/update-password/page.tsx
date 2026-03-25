@@ -30,9 +30,8 @@ export default function UpdatePasswordPage() {
   };
 
   return (
-    <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-gray-100">
-      <h2 className="text-xl font-bold text-gray-900 mb-6 text-center">Set New Password</h2>
-
+    <div className="w-full">
+      <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">Set New Password</h2>
       {message && (
         <div className={`mb-6 p-4 rounded-xl flex items-start gap-3 text-sm ${message.type === 'error' ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600'}`}>
           <AlertCircle className="h-5 w-5 shrink-0" />

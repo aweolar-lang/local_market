@@ -30,8 +30,10 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-gray-100">
-      <h2 className="text-xl font-bold text-gray-900 mb-6 text-center">Welcome back</h2>
+
+    
+    <div className="w-full">
+      <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">Welcome back</h2>
 
       {message && (
         <div className="mb-6 p-4 rounded-xl flex items-start gap-3 text-sm bg-red-50 text-red-600">
