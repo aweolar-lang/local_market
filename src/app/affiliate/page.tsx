@@ -225,7 +225,7 @@ export default function AffiliatePage() {
 
   const copyToClipboard = () => {
     if (!stats || !isAffiliate) return;
-    navigator.clipboard.writeText(`${siteUrl}/auth?ref=${stats.referral_code}`);
+    navigator.clipboard.writeText(`${siteUrl}/auth/signup?ref=${stats.referral_code}`);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -371,7 +371,7 @@ export default function AffiliatePage() {
             <div className="flex flex-col sm:flex-row bg-gray-50 border border-gray-200 rounded-xl p-2 shadow-inner gap-2">
               <input 
                 readOnly 
-                value={`${siteUrl}/auth?ref=${stats?.referral_code}`} 
+                value={`${siteUrl}/auth/signup?ref=${stats?.referral_code}`} 
                 className="bg-transparent flex-1 px-3 py-2 text-sm outline-none font-medium text-gray-700 min-w-0 truncate" 
               />
               <button 

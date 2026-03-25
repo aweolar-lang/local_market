@@ -18,8 +18,8 @@ const config = {
   changefreq: 'daily',
   priority: 0.7,
   sitemapSize: 5000,
-  exclude: ['/admin/*', '/pay','/dashboard','/auth', '/api/*'],
-
+  exclude: ['/admin/*', '/pay', '/dashboard', '/dashboard/*', '/auth/*', '/api/*'],
+  
   async additionalPaths() {
     const { data: items } = await supabase
       .from('items')

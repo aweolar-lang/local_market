@@ -17,7 +17,7 @@ export function useUser() {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session?.user) {
-        router.push("/auth");
+        router.push("/auth/login");
         return;
       }
 
@@ -31,7 +31,7 @@ export function useUser() {
 
       if (error || !userProfile) {
         await supabase.auth.signOut();
-        router.push("/auth");
+        router.push("/auth/login");
         return;
       }
 
@@ -48,7 +48,7 @@ export function useUser() {
           async (payload) => {
             if (payload.eventType === 'DELETE') {
               await supabase.auth.signOut();
-              router.push("/auth");
+              router.push("/auth/login");
             } else if (payload.eventType === 'UPDATE' && isMounted) {
               setProfile(payload.new);
             }
