@@ -159,7 +159,7 @@ export default function AffiliatePage() {
     setPaymentMessage("");
 
     try {
-      const res = await fetch("/api/mpesa/stk", {
+      const res = await fetch("/api/autopay/stk", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ phoneNumber: phoneInput, userId: userId }),
@@ -185,7 +185,7 @@ export default function AffiliatePage() {
     setWithdrawMessage("");
     
     try {
-      const res = await fetch("/api/withdraw", {
+      const res = await fetch("/api/autopay/withdraw", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
