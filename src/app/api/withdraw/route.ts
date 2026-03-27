@@ -1,41 +1,35 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js"; 
+import { createClient } from "@supabase/supabase-js";
 
-// Initialize the Admin Client to bypass Row Level Security (RLS)
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY! 
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
 export async function POST(req: Request) {
   try {
     const { userId, amount } = await req.json();
-    if (!userId || !amount) {
-      return NextResponse.json({ success: false, error: "Missing required fields" }, { status: 400 });
-    }
 
-    if (amount < 150) {
+    if (!userId || !amount || amount < 150) {
       return NextResponse.json({ success: false, error: "Minimum withdrawal is Ksh 150" }, { status: 400 });
     }
 
-    // 1. FETCH PROFILE
+    // 1. Fetch Profile
     const { data: profile, error: profileError } = await supabaseAdmin
       .from('profiles')
-      .select('phone_number') 
+      .select('phone_number, wallet_balance, is_affiliate')
       .eq('id', userId)
       .single();
 
-    if (profileError || !profile?.phone_number) {
-      console.error("Profile Fetch Error:", profileError);
-      return NextResponse.json({ success: false, error: "No registered phone number found on your account. Please update your profile." }, { status: 400 });
+    if (profileError || !profile?.phone_number || !profile.is_affiliate) {
+      return NextResponse.json({ success: false, error: "Invalid account or missing phone number." }, { status: 400 });
     }
 
-    // Bulletproof phone formatting for Safaricom
     let targetPhone = profile.phone_number.trim();
     if (targetPhone.startsWith('+')) targetPhone = targetPhone.slice(1);
     if (targetPhone.startsWith('0')) targetPhone = `254${targetPhone.slice(1)}`;
 
-    // 2. FETCH LEDGER BALANCE
+    // 2. Fetch True Ledger Balance
     const { data: ledgerEntries } = await supabaseAdmin
       .from('transactions')
       .select('amount')
@@ -43,30 +37,41 @@ export async function POST(req: Request) {
 
     const trueBalance = ledgerEntries?.reduce((sum, txn) => sum + Number(txn.amount), 0) || 0;
 
-    if (trueBalance < amount) {
-      return NextResponse.json({ success: false, error: `Insufficient funds. Your true balance is Ksh ${trueBalance}` }, { status: 400 });
+    if (trueBalance < amount || profile.wallet_balance < amount) {
+      return NextResponse.json({ 
+        success: false, 
+        error: `Insufficient funds. Your true verified balance is Ksh ${trueBalance}` 
+      }, { status: 400 });
     }
 
-    // 3. DEDUCT FROM LEDGER
+    // 3. Fee Calculation (Keeping your 5% logic)
+    const transactionFee = Math.ceil(amount * 0.05);
+    const amountToSendToMpesa = amount - transactionFee;
+
+    if (amountToSendToMpesa <= 0) {
+      return NextResponse.json({ success: false, error: "Amount too low to cover fees." }, { status: 400 });
+    }
+
+    // 4. Deduct from Ledger
     const { data: transactionData, error: insertTxnError } = await supabaseAdmin
       .from('transactions')
       .insert({
         user_id: userId,
         amount: -amount,
         transaction_type: 'withdrawal',
-        description: `Auto-Withdrawal to ${targetPhone}`
+        description: `Manual Withdrawal to ${targetPhone} (5% fee applied)`
       })
       .select()
       .single();
 
     if (insertTxnError) throw insertTxnError;
 
-   
+    // 5. Insert into Withdrawals Queue
     const { data: withdrawData, error: withdrawError } = await supabaseAdmin
       .from('withdrawals2')
       .insert({
         user_id: userId,
-        amount: amount,
+        amount: amount, 
         phone_number: targetPhone,
         status: 'processing',
         transaction_id: transactionData.id
@@ -76,44 +81,38 @@ export async function POST(req: Request) {
 
     if (withdrawError) throw withdrawError;
 
-    const consumerKey = process.env.MPESA_B2C_CONSUMER_KEY!;
-    const consumerSecret = process.env.MPESA_B2C_CONSUMER_SECRET!;
-    const auth = Buffer.from(`${consumerKey}:${consumerSecret}`).toString("base64");
-    
-    const tokenResponse = await fetch("https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials", {
-      headers: { Authorization: `Basic ${auth}` },
-    });
-    const { access_token } = await tokenResponse.json();
+    // 6. Update Wallet
+    await supabaseAdmin
+      .from('profiles')
+      .update({ wallet_balance: trueBalance - amount })
+      .eq('id', userId);
 
-    const b2cResponse = await fetch("https://sandbox.safaricom.co.ke/mpesa/b2c/v1/paymentrequest", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${access_token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        InitiatorName: process.env.MPESA_B2C_INITIATOR_NAME, 
-        SecurityCredential: process.env.MPESA_B2C_PASSWORD, 
-        CommandID: "BusinessPayment",
-        Amount: amount,
-        PartyA: process.env.MPESA_B2C_SHORTCODE, 
-        PartyB: targetPhone,
-        Remarks: "LocalSoko Affiliate Payout",
-       
-        QueueTimeOutURL: `${process.env.NEXT_PUBLIC_SITE_URL}/api/mpesa/b2c-timeout?w_id=${withdrawData.id}`,
-        ResultURL: `${process.env.NEXT_PUBLIC_SITE_URL}/api/mpesa/b2c-result?w_id=${withdrawData.id}`,
-        Occasion: "Affiliate Payout"
-      }),
-    });
+    // 7. SEND ADMIN SMS NOTIFICATION
+    if (process.env.AFRICASTALKING_API_KEY && process.env.ADMIN_PHONE_NUMBER) {
+      try {
+        const smsPayload = new URLSearchParams({
+          username: process.env.AFRICASTALKING_USERNAME!,
+          to: process.env.ADMIN_PHONE_NUMBER!, 
+          message: `NEW WITHDRAWAL: Send KSH ${amountToSendToMpesa} to ${targetPhone}. Log in to admin panel to mark as Paid.`,
+        });
 
-    const b2cData = await b2cResponse.json();
-
-    // 5. UPDATE WALLET BALANCE
-    await supabaseAdmin.from('profiles').update({ wallet_balance: trueBalance - amount }).eq('id', userId);
+        await fetch('https://api.africastalking.com/version1/messaging', {
+          method: 'POST',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'apiKey': process.env.AFRICASTALKING_API_KEY!,
+          },
+          body: smsPayload.toString(),
+        });
+      } catch (smsError) {
+        console.error("Admin SMS Failed (but withdrawal saved):", smsError);
+      }
+    }
 
     return NextResponse.json({ 
       success: true, 
-      message: `Ksh ${amount} is being sent to your registered number: ${targetPhone}` 
+      message: `Withdrawal of Ksh ${amount} requested successfully. It will be sent to ${targetPhone} shortly.` 
     });
 
   } catch (error: any) {
@@ -121,3 +120,5 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: false, error: "An internal error occurred." }, { status: 500 });
   }
 }
+
+

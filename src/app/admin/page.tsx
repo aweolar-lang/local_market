@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { 
   Users, DollarSign, Wallet, ArrowDownRight, 
@@ -147,6 +148,32 @@ export default function AdminDashboard() {
 
   return (
     <div className="p-4 sm:p-8 space-y-8 max-w-7xl mx-auto">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-gray-900 border border-gray-800 p-6 rounded-2xl shadow-lg">
+        <div>
+          <h1 className="text-2xl font-black text-white flex items-center gap-2">
+            <Crown className="h-7 w-7 text-yellow-500" />
+            Founder HQ
+          </h1>
+          <p className="text-gray-400 text-sm font-medium mt-1">Global System Overview & Management</p>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+          <Link 
+            href="/admin/network" 
+            className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-gray-800 hover:bg-gray-700 text-white border border-gray-700 px-5 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm"
+          >
+            <Users className="h-4 w-4 text-purple-400" />
+            Network Map
+          </Link>
+          <Link 
+            href="/admin/withdrawals" 
+            className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-gray-800 hover:bg-gray-700 text-white border border-gray-700 px-5 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm"
+          >
+            <ArrowDownRight className="h-4 w-4 text-orange-400" />
+            Manage Payouts
+          </Link>
+        </div>
+      </div>
       
       {/* 1. FINANCIAL SUMMARY CARDS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
