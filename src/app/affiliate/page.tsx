@@ -73,9 +73,9 @@ export default function AffiliatePage() {
   const [stats, setStats] = useState<AffiliateStats | null>(null);
   const [copied, setCopied] = useState(false);
   const [siteUrl, setSiteUrl] = useState("");
-  const { profile: secureProfile, user: authUser } = useUser();
+  const { profile: secureProfile, user: authUser, loading: profileLoading } = useUser();
 
-  // Payment & Withdrawal States
+  // Payment & Withdrawal States (Removed phoneInput)
   const [paymentStatus, setPaymentStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [paymentMessage, setPaymentMessage] = useState("");
   
@@ -97,12 +97,6 @@ export default function AffiliatePage() {
 
       setUserId(secureProfile.id);
       setIsAffiliate(secureProfile.is_affiliate);
-
-      // 1. Sync the UI with the exact Database Payment Status on load
-      if (!secureProfile.is_affiliate && secureProfile.mpesa_payment_status === 'processing') {
-        setPaymentStatus('loading');
-        setPaymentMessage("Awaiting secure payment completion...");
-      }
 
       const { count } = await supabase
         .from("profiles")
@@ -127,73 +121,66 @@ export default function AffiliatePage() {
         .limit(20);
 
       if (txns) setTransactions(txns);
+      
       setLoading(false);
     };
 
     fetchData();
   }, [secureProfile, authUser]);
 
-  // SMART DB POLLING: Listens for both Success AND Failures
+  // AUTO-VERIFY MPESA PAYMENT (Only checks for Success now)
   useEffect(() => {
     let interval: NodeJS.Timeout;
 
-    if (userId && !isAffiliate && paymentStatus === 'loading') {
+    // We only need to check if they are stuck on the page. 
+    // Usually, Paystack redirects them back, which triggers a full reload anyway.
+    if (userId && !isAffiliate) {
       interval = setInterval(async () => {
         const { data } = await supabase
           .from("profiles")
-          .select("is_affiliate, mpesa_payment_status")
+          .select("is_affiliate")
           .eq("id", userId)
           .single();
 
-        if (data) {
-          // Success Path
-          if (data.is_affiliate === true) {
-            clearInterval(interval);
-            setPaymentStatus('success');
-            setPaymentMessage("Payment received! Unlocking your dashboard...");
-            setTimeout(() => {
-              window.location.reload();
-            }, 1500);
-          } 
-          // Failure Path: Webhook reset the DB to idle
-          else if (data.mpesa_payment_status === 'idle') {
-            clearInterval(interval);
-            setPaymentStatus('error');
-            setPaymentMessage("Transaction failed or was cancelled. Please try again.");
-          }
+        if (data && data.is_affiliate === true) {
+          clearInterval(interval);
+          setPaymentStatus('success');
+          setPaymentMessage("Payment received! Unlocking your dashboard...");
+          setTimeout(() => {
+            window.location.reload();
+          }, 1500);
         }
-      }, 3000); 
+      }, 4000); 
     }
 
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [paymentStatus, userId, isAffiliate]);
+  }, [userId, isAffiliate]);
 
-  const handleMpesaSubmit = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
+  const handleMpesaSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setPaymentStatus('loading');
-    setPaymentMessage("Connecting to secure payment gateway...");
+    setPaymentMessage(""); // Clear old messages
 
     try {
       const res = await fetch("/api/paystack/initialize", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        // No more phone input, just the ID
-        body: JSON.stringify({ userId: userId }),
+        body: JSON.stringify({ userId: userId }), // No phone number needed!
       });
       const data = await res.json();
       
       if (data.success && data.checkoutUrl) {
-        setPaymentMessage("Redirecting to Paystack...");
         window.location.href = data.checkoutUrl; 
       } else {
+        // This is where your backend's 2-minute error message ("A payment is already processing...") gets caught and displayed!
         setPaymentStatus('error');
         setPaymentMessage(data.error || "Failed to initiate payment.");
       }
     } catch (err) {
       setPaymentStatus('error');
-      setPaymentMessage("A network error occurred.");
+      setPaymentMessage("A network error occurred. Please check your connection.");
     }
   };
 
@@ -395,29 +382,29 @@ export default function AffiliatePage() {
                 </div>
 
                 {/* 3. INVITE LINK */}
-                <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100">
-                  <div className="flex items-center justify-between mb-6">
-                    <div className="flex items-center gap-3">
-                      <div className="p-3 bg-green-50 text-green-600 rounded-xl"><Users className="h-6 w-6" /></div>
-                      <h3 className="text-xl font-bold text-gray-900">Your Invite Link</h3>
-                    </div>
-                    <div className="bg-gray-100 text-gray-600 px-3 py-1 rounded-lg text-xs font-bold uppercase">Active</div>
-                  </div>
-                  <p className="text-gray-500 text-sm mb-6">Share this link. Earn commissions passively when your friends join and invite others.</p>
-                  <div className="flex flex-col sm:flex-row bg-gray-50 border border-gray-200 rounded-xl p-2 shadow-inner gap-2">
-                    <input 
-                      readOnly 
-                      value={`${siteUrl}/auth/signup?ref=${stats?.referral_code}`} 
-                      className="bg-transparent flex-1 px-3 py-2 text-sm outline-none font-medium text-gray-700 min-w-0 truncate" 
-                    />
-                    <button 
-                      onClick={copyToClipboard} 
-                      className="bg-black hover:bg-gray-800 text-white px-6 py-3 rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition-colors shrink-0 w-full sm:w-auto"
-                    >
-                      {copied ? <><Check className="h-4 w-4"/> Copied!</> : <><Copy className="h-4 w-4"/> Copy Link</>}
-                    </button>
-                  </div>
-                </div>
+          <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-green-50 text-green-600 rounded-xl"><Users className="h-6 w-6" /></div>
+                <h3 className="text-xl font-bold text-gray-900">Your Invite Link</h3>
+              </div>
+              <div className="bg-gray-100 text-gray-600 px-3 py-1 rounded-lg text-xs font-bold uppercase">Active</div>
+            </div>
+            <p className="text-gray-500 text-sm mb-6">Share this link. Earn commissions passively when your friends join and invite others.</p>
+            <div className="flex flex-col sm:flex-row bg-gray-50 border border-gray-200 rounded-xl p-2 shadow-inner gap-2">
+              <input 
+                readOnly 
+                value={`${siteUrl}/auth/signup?ref=${stats?.referral_code}`} 
+                className="bg-transparent flex-1 px-3 py-2 text-sm outline-none font-medium text-gray-700 min-w-0 truncate" 
+              />
+              <button 
+                onClick={copyToClipboard} 
+                className="bg-black hover:bg-gray-800 text-white px-6 py-3 rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition-colors shrink-0 w-full sm:w-auto"
+              >
+                {copied ? <><Check className="h-4 w-4"/> Copied!</> : <><Copy className="h-4 w-4"/> Copy Link</>}
+              </button>
+            </div>
+          </div>
 
                 {/* 4. TRANSACTION LEDGER */}
                 <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
@@ -442,7 +429,9 @@ export default function AffiliatePage() {
                                 {txn.amount > 0 ? <TrendingUp className="h-5 w-5" /> : <ArrowDownRight className="h-5 w-5" />}
                               </div>
                               <div>
-                                <SmartTransactionDescription description={txn.description} />
+                              {/* Find this part in your code: */}
+                              <SmartTransactionDescription description={txn.description} />
+                              
                                 <p className="text-xs text-gray-500 mt-1">
                                   {new Date(txn.created_at).toLocaleDateString()}
                                 </p>
@@ -467,45 +456,39 @@ export default function AffiliatePage() {
                 <h3 className="text-2xl font-black text-gray-900 mb-2 mt-2">Unlock Your Earning Power</h3>
                 <p className="text-gray-500 text-sm mb-6 max-w-md">Pay a one-time activation fee of Ksh 400 to unlock your unique link, start earning 3 tiers of commissions, and claim your VIP Seller badge.</p>
                 
-                {paymentStatus === 'loading' || paymentStatus === 'success' ? (
+               {paymentStatus === 'success' ? (
                   <div className="text-center py-8 bg-green-50 rounded-2xl border border-green-200 shadow-inner">
                     <Loader2 className="h-12 w-12 text-green-500 mx-auto animate-spin mb-4" />
-                    <h3 className="text-lg font-black text-green-800 mb-1">
-                      {paymentStatus === 'loading' ? "Awaiting Payment..." : "Payment Received!"}
-                    </h3>
-                    <p className="text-green-700 font-medium text-sm px-4 mb-4">
-                      {paymentMessage || "Please complete the transaction on the secure page."}
-                    </p>
-                    
-                    {/* Failsafe Button */}
-                    <button 
-                      onClick={() => {
-                        setPaymentStatus('idle');
-                        setPaymentMessage('');
-                      }}
-                      className="text-sm font-bold text-green-600 underline hover:text-green-800 transition-colors"
-                    >
-                      Cancel or Try Again
-                    </button>
+                    <h3 className="text-lg font-black text-green-800 mb-1">Awaiting Payment...</h3>
+                    <p className="text-green-700 font-medium text-sm px-4">{paymentMessage}</p>
                   </div>
                 ) : (
-                  <div className="space-y-4 max-w-sm">
+                  <form onSubmit={handleMpesaSubmit} className="space-y-4 max-w-sm">
+                    {/* The backend error messages (like the 2-minute warning) will appear right here */}
                     {paymentStatus === 'error' && (
-                      <div className="p-3 bg-red-50 text-red-600 rounded-xl text-xs font-bold border border-red-100">
-                        {paymentMessage}
+                      <div className="p-3 bg-red-50 border border-red-200 rounded-xl">
+                        <p className="text-red-600 text-sm font-bold flex items-center gap-2">
+                          <ShieldAlert className="h-4 w-4 shrink-0" />
+                          {paymentMessage}
+                        </p>
                       </div>
                     )}
                     
                     <button 
-                      onClick={handleMpesaSubmit} 
-                      className="w-full bg-[#52B44B] hover:bg-[#43963d] text-white font-black text-lg py-4 rounded-xl transition-all shadow-md shadow-green-500/20 flex justify-center items-center"
+                      type="submit" 
+                      disabled={paymentStatus === 'loading'} 
+                      className="w-full bg-[#52B44B] hover:bg-[#43963d] disabled:bg-gray-400 text-white font-black text-lg py-4 rounded-xl transition-all shadow-md flex justify-center items-center"
                     >
-                      Proceed to Secure Payment
+                      {paymentStatus === 'loading' ? (
+                        <><Loader2 className="h-5 w-5 animate-spin mr-2" /> Connecting...</>
+                      ) : (
+                        "Proceed to Secure Payment"
+                      )}
                     </button>
                     <p className="text-[10px] text-gray-400 text-center mt-2 font-medium">
-                      You will be redirected to Paystack's checkout to complete your activation.
+                      You will be redirected to Paystack's secure checkout to complete your activation.
                     </p>
-                  </div>
+                  </form>
                 )}
               </div>
             )}
