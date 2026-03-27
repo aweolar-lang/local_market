@@ -64,13 +64,23 @@ export default function AdminDashboard() {
     setIsAuthorized(true);
     await fetchAllData(currentUser.wallet_balance || 0);
   };
-
-  const fetchAllData = async (adminWallet: number) => {
-    // 1. Fetch from the new Master Ledger View! (No frontend math needed)
+const fetchAllData = async (adminWallet: number) => {
+    // 1. Fetch from the new Master Ledger View
     const { data: dbStats, error: statsError } = await supabase
       .from('system_master_ledger')
       .select('*')
       .single();
+
+    const { data: allWithdrawals } = await supabase
+      .from('withdrawals2')
+      .select('*, profiles(username)')
+      .order('created_at', { ascending: false });
+
+    const pendingList = allWithdrawals?.filter(w => w.status === 'processing') || [];
+    
+    // Calculate the total money that has left the building (Completed + Processing)
+    const totalWithdrawnAmount = allWithdrawals?.filter(w => w.status === 'completed' || w.status === 'processing')
+      .reduce((sum, w) => sum + Number(w.amount), 0) || 0;
 
     if (dbStats && !statsError) {
       setStats({
@@ -80,23 +90,15 @@ export default function AdminDashboard() {
         referredJoins: dbStats.referred_joins || 0,
         grossRevenue: dbStats.gross_revenue || 0,
         usersUnclaimedMoney: dbStats.total_customers_money || 0,
-        platformProfit: dbStats.gross_platform_profit || 0,
+        platformProfit: (dbStats.gross_platform_profit || 0) - totalWithdrawnAmount, 
         adminPersonalWallet: adminWallet,
         totalAdmins: dbStats.total_admins || 0,
         totalFounders: dbStats.total_founders || 0,
       });
     }
 
-    // 2. Fetch Pending Withdrawals
-    const { data: withdrawals } = await supabase
-      .from('withdrawals2')
-      .select('*, profiles(username)')
-      .eq('status', 'processing')
-      .order('created_at', { ascending: false });
-    
-    if (withdrawals) setPendingWithdrawals(withdrawals);
+    setPendingWithdrawals(pendingList);
 
-    // 3. Fetch Master Ledger Book
     const { data: ledger } = await supabase
       .from('transactions')
       .select('*, profiles(username)')
@@ -107,6 +109,7 @@ export default function AdminDashboard() {
 
     setLoading(false);
   };
+  
 
   // MARK A WITHDRAWAL AS PAID (Kept as a manual fallback just in case Safaricom B2C fails)
   const handleMarkAsPaid = async (withdrawalId: string) => {

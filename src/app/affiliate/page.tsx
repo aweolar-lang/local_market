@@ -7,7 +7,7 @@ import { supabase } from "@/lib/supabase";
 import { 
   ArrowLeft, Copy, Check, TrendingUp, Users, Award, 
   Smartphone, Loader2, Lock, Crown, Star, ShieldCheck, 
-  Zap, ShieldAlert, ArrowDownRight 
+  Zap, ShieldAlert, ArrowDownRight, Clock
 } from "lucide-react";
 import { useUser } from "@/hooks/useUser";
 
@@ -78,6 +78,7 @@ export default function AffiliatePage() {
   // Payment & Withdrawal States (Removed phoneInput)
   const [paymentStatus, setPaymentStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [paymentMessage, setPaymentMessage] = useState("");
+  const [cooldownSeconds, setCooldownSeconds] = useState(0);
   
   const [withdrawAmount, setWithdrawAmount] = useState("");
   const [withdrawStatus, setWithdrawStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
@@ -97,6 +98,16 @@ export default function AffiliatePage() {
 
       setUserId(secureProfile.id);
       setIsAffiliate(secureProfile.is_affiliate);
+
+      if (!secureProfile.is_affiliate && secureProfile.mpesa_payment_status === 'processing' && secureProfile.mpesa_locked_at) {
+        const lockTime = new Date(secureProfile.mpesa_locked_at).getTime();
+        const diffSeconds = Math.floor((Date.now() - lockTime) / 1000);
+        if (diffSeconds < 120) {
+          setCooldownSeconds(120 - diffSeconds);
+          setPaymentStatus('error');
+          setPaymentMessage("A payment is already processing. Please wait.");
+        }
+      }
 
       const { count } = await supabase
         .from("profiles")
@@ -158,6 +169,23 @@ export default function AffiliatePage() {
     };
   }, [userId, isAffiliate]);
 
+  // COUNTDOWN TIMER LOGIC
+  useEffect(() => {
+    if (cooldownSeconds <= 0) return;
+    
+    const timer = setInterval(() => {
+      setCooldownSeconds(prev => prev - 1);
+    }, 1000);
+
+    // Auto-clear the error when the timer finishes
+    if (cooldownSeconds === 1) {
+      setPaymentStatus('idle');
+      setPaymentMessage("");
+    }
+
+    return () => clearInterval(timer);
+  }, [cooldownSeconds]);
+
   const handleMpesaSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setPaymentStatus('loading');
@@ -174,9 +202,13 @@ export default function AffiliatePage() {
       if (data.success && data.checkoutUrl) {
         window.location.href = data.checkoutUrl; 
       } else {
-        // This is where your backend's 2-minute error message ("A payment is already processing...") gets caught and displayed!
         setPaymentStatus('error');
         setPaymentMessage(data.error || "Failed to initiate payment.");
+        
+        // START COUNTDOWN IF IT'S THE 2-MINUTE ERROR
+        if (data.error && data.error.includes("2 minutes")) {
+          setCooldownSeconds(120);
+        }
       }
     } catch (err) {
       setPaymentStatus('error');
@@ -476,11 +508,13 @@ export default function AffiliatePage() {
                     
                     <button 
                       type="submit" 
-                      disabled={paymentStatus === 'loading'} 
-                      className="w-full bg-[#52B44B] hover:bg-[#43963d] disabled:bg-gray-400 text-white font-black text-lg py-4 rounded-xl transition-all shadow-md flex justify-center items-center"
+                      disabled={paymentStatus === 'loading' || cooldownSeconds > 0} 
+                      className="w-full bg-[#52B44B] hover:bg-[#43963d] disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-black text-lg py-4 rounded-xl transition-all shadow-md flex justify-center items-center"
                     >
                       {paymentStatus === 'loading' ? (
                         <><Loader2 className="h-5 w-5 animate-spin mr-2" /> Connecting...</>
+                      ) : cooldownSeconds > 0 ? (
+                        <><Clock className="h-5 w-5 mr-2 animate-pulse" /> Try again in {Math.floor(cooldownSeconds / 60)}:{(cooldownSeconds % 60).toString().padStart(2, '0')}</>
                       ) : (
                         "Proceed to Secure Payment"
                       )}
