@@ -77,6 +77,7 @@ export default function AffiliatePage() {
 
   // Payment & Withdrawal States
   const [phoneInput, setPhoneInput] = useState("");
+
   const [paymentStatus, setPaymentStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [paymentMessage, setPaymentMessage] = useState("");
   
@@ -157,21 +158,20 @@ export default function AffiliatePage() {
   }, [paymentStatus, userId]);
 
   
-  const handleMpesaSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+const handleMpesaSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     setPaymentStatus('loading');
-    setPaymentMessage("Connecting to secure payment gateway...");
+    setPaymentMessage("Redirecting to secure gateway...");
 
     try {
       const res = await fetch("/api/paystack/initialize", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phoneNumber: phoneInput, userId: userId }),
+        body: JSON.stringify({ userId: userId }), 
       });
       const data = await res.json();
       
       if (data.success && data.checkoutUrl) {
-        setPaymentMessage("Redirecting to Paystack...");
         window.location.href = data.checkoutUrl; 
       } else {
         setPaymentStatus('error');
@@ -457,39 +457,45 @@ export default function AffiliatePage() {
                 <h3 className="text-2xl font-black text-gray-900 mb-2 mt-2">Unlock Your Earning Power</h3>
                 <p className="text-gray-500 text-sm mb-6 max-w-md">Pay a one-time activation fee of Ksh 400 to unlock your unique link, start earning 3 tiers of commissions, and claim your VIP Seller badge.</p>
                 
-               {paymentStatus === 'success' ? (
+                {paymentStatus === 'loading' || paymentStatus === 'success' ? (
                   <div className="text-center py-8 bg-green-50 rounded-2xl border border-green-200 shadow-inner">
                     <Loader2 className="h-12 w-12 text-green-500 mx-auto animate-spin mb-4" />
-                    <h3 className="text-lg font-black text-green-800 mb-1">Awaiting Payment...</h3>
-                    <p className="text-green-700 font-medium text-sm px-4">{paymentMessage}</p>
+                    <h3 className="text-lg font-black text-green-800 mb-1">
+                      {paymentStatus === 'loading' ? "Connecting to Secure Gateway..." : "Awaiting Payment..."}
+                    </h3>
+                    <p className="text-green-700 font-medium text-sm px-4 mb-4">
+                      {paymentMessage || "Please complete the payment on the next screen."}
+                    </p>
+                    
+                    {/* Failsafe Button: If they hit 'Back' in the browser, they can reset the UI */}
+                    <button 
+                      onClick={() => {
+                        setPaymentStatus('idle');
+                        setPaymentMessage('');
+                      }}
+                      className="text-sm font-bold text-green-600 underline hover:text-green-800 transition-colors"
+                    >
+                      Cancel or Try Again
+                    </button>
                   </div>
                 ) : (
-                  <form onSubmit={handleMpesaSubmit} className="space-y-4 max-w-sm">
-                    <div>
-                      <input 
-                        type="tel" required placeholder="M-Pesa Number (e.g. 07...)"
-                        value={phoneInput} onChange={(e) => setPhoneInput(e.target.value)}
-                        className="w-full px-5 py-4 text-black bg-gray-50 border border-gray-300 rounded-xl text-sm font-medium focus:ring-2 focus:ring-green-500 outline-none transition-all"
-                      />
-                    </div>
-                    {paymentStatus === 'error' && <p className="text-red-500 text-xs font-bold">{paymentMessage}</p>}
+                  <div className="space-y-4 max-w-sm">
+                    {paymentStatus === 'error' && (
+                      <div className="p-3 bg-red-50 text-red-600 rounded-xl text-xs font-bold border border-red-100">
+                        {paymentMessage}
+                      </div>
+                    )}
                     
-                    {/* Updated Button for Paystack Redirect */}
                     <button 
-                      type="submit" 
-                      disabled={paymentStatus === 'loading'} 
+                      onClick={handleMpesaSubmit} 
                       className="w-full bg-[#52B44B] hover:bg-[#43963d] text-white font-black text-lg py-4 rounded-xl transition-all shadow-md shadow-green-500/20 flex justify-center items-center"
                     >
-                      {paymentStatus === 'loading' ? (
-                        <><Loader2 className="h-5 w-5 animate-spin mr-2" /> Connecting...</>
-                      ) : (
-                        "Proceed to Secure Payment"
-                      )}
+                      Proceed to Secure Payment
                     </button>
                     <p className="text-[10px] text-gray-400 text-center mt-2 font-medium">
                       You will be redirected to Paystack's secure checkout to complete your activation.
                     </p>
-                  </form>
+                  </div>
                 )}
               </div>
             )}
