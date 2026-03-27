@@ -87,27 +87,35 @@ export async function POST(req: Request) {
       .update({ wallet_balance: trueBalance - amount })
       .eq('id', userId);
 
-    // 7. SEND ADMIN SMS NOTIFICATION
-    if (process.env.AFRICASTALKING_API_KEY && process.env.ADMIN_PHONE_NUMBER) {
+   // 7. SEND ADMIN SMS NOTIFICATION
+    if (process.env.AFRICASTALKING_API_KEY && process.env.ADMIN_PHONE_NUMBER && process.env.AFRICASTALKING_USERNAME) {
       try {
         const smsPayload = new URLSearchParams({
-          username: process.env.AFRICASTALKING_USERNAME!,
-          to: process.env.ADMIN_PHONE_NUMBER!, 
-          message: `NEW WITHDRAWAL: Send KSH ${amountToSendToMpesa} to ${targetPhone}. Log in to admin panel to mark as Paid.`,
+          username: process.env.AFRICASTALKING_USERNAME,
+          to: process.env.ADMIN_PHONE_NUMBER, 
+          message: `NEW WITHDRAWAL: Send KSH ${amountToSendToMpesa} to ${targetPhone}. Log in to admin panel to mark as processing.`,
         });
 
-        await fetch('https://api.africastalking.com/version1/messaging', {
+        const smsRes = await fetch('https://api.africastalking.com/version1/messaging', {
           method: 'POST',
           headers: {
             'Accept': 'application/json',
             'Content-Type': 'application/x-www-form-urlencoded',
-            'apiKey': process.env.AFRICASTALKING_API_KEY!,
+            'apiKey': process.env.AFRICASTALKING_API_KEY,
           },
           body: smsPayload.toString(),
         });
+
+        if (!smsRes.ok) {
+          const errorText = await smsRes.text();
+          throw new Error(`Africa's Talking rejected the SMS: ${errorText}`);
+        }
+
       } catch (smsError) {
         console.error("Admin SMS Failed (but withdrawal saved):", smsError);
       }
+    } else {
+      console.warn("SMS skipped: Missing Africa's Talking ENV variables.");
     }
 
     return NextResponse.json({ 

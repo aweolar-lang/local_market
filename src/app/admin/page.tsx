@@ -91,7 +91,7 @@ export default function AdminDashboard() {
     const { data: withdrawals } = await supabase
       .from('withdrawals2')
       .select('*, profiles(username)')
-      .eq('status', 'pending')
+      .eq('status', 'processing')
       .order('created_at', { ascending: false });
     
     if (withdrawals) setPendingWithdrawals(withdrawals);
