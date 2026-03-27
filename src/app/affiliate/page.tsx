@@ -73,11 +73,9 @@ export default function AffiliatePage() {
   const [stats, setStats] = useState<AffiliateStats | null>(null);
   const [copied, setCopied] = useState(false);
   const [siteUrl, setSiteUrl] = useState("");
-  const { profile: secureProfile, user: authUser, loading: profileLoading } = useUser();
+  const { profile: secureProfile, user: authUser } = useUser();
 
   // Payment & Withdrawal States
-  const [phoneInput, setPhoneInput] = useState("");
-
   const [paymentStatus, setPaymentStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [paymentMessage, setPaymentMessage] = useState("");
   
@@ -91,7 +89,7 @@ export default function AffiliatePage() {
   // Ledger State
   const [transactions, setTransactions] = useState<any[]>([]);
 
- useEffect(() => {
+  useEffect(() => {
     setSiteUrl(window.location.origin);
 
     const fetchData = async () => {
@@ -99,6 +97,12 @@ export default function AffiliatePage() {
 
       setUserId(secureProfile.id);
       setIsAffiliate(secureProfile.is_affiliate);
+
+      // 1. Sync the UI with the exact Database Payment Status on load
+      if (!secureProfile.is_affiliate && secureProfile.mpesa_payment_status === 'processing') {
+        setPaymentStatus('loading');
+        setPaymentMessage("Awaiting secure payment completion...");
+      }
 
       const { count } = await supabase
         .from("profiles")
@@ -123,31 +127,40 @@ export default function AffiliatePage() {
         .limit(20);
 
       if (txns) setTransactions(txns);
-      
       setLoading(false);
     };
 
     fetchData();
   }, [secureProfile, authUser]);
 
-  // AUTO-VERIFY MPESA PAYMENT
+  // SMART DB POLLING: Listens for both Success AND Failures
   useEffect(() => {
     let interval: NodeJS.Timeout;
 
-    if (paymentStatus === 'success' && userId) {
+    if (userId && !isAffiliate && paymentStatus === 'loading') {
       interval = setInterval(async () => {
         const { data } = await supabase
           .from("profiles")
-          .select("is_affiliate")
+          .select("is_affiliate, mpesa_payment_status")
           .eq("id", userId)
           .single();
 
-        if (data && data.is_affiliate === true) {
-          clearInterval(interval);
-          setPaymentMessage("Payment received! Unlocking your dashboard...");
-          setTimeout(() => {
-            window.location.reload();
-          }, 1500);
+        if (data) {
+          // Success Path
+          if (data.is_affiliate === true) {
+            clearInterval(interval);
+            setPaymentStatus('success');
+            setPaymentMessage("Payment received! Unlocking your dashboard...");
+            setTimeout(() => {
+              window.location.reload();
+            }, 1500);
+          } 
+          // Failure Path: Webhook reset the DB to idle
+          else if (data.mpesa_payment_status === 'idle') {
+            clearInterval(interval);
+            setPaymentStatus('error');
+            setPaymentMessage("Transaction failed or was cancelled. Please try again.");
+          }
         }
       }, 3000); 
     }
@@ -155,23 +168,24 @@ export default function AffiliatePage() {
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [paymentStatus, userId]);
+  }, [paymentStatus, userId, isAffiliate]);
 
-  
-const handleMpesaSubmit = async (e?: React.FormEvent) => {
+  const handleMpesaSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     setPaymentStatus('loading');
-    setPaymentMessage("Redirecting to secure gateway...");
+    setPaymentMessage("Connecting to secure payment gateway...");
 
     try {
       const res = await fetch("/api/paystack/initialize", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: userId }), 
+        // No more phone input, just the ID
+        body: JSON.stringify({ userId: userId }),
       });
       const data = await res.json();
       
       if (data.success && data.checkoutUrl) {
+        setPaymentMessage("Redirecting to Paystack...");
         window.location.href = data.checkoutUrl; 
       } else {
         setPaymentStatus('error');
@@ -195,7 +209,6 @@ const handleMpesaSubmit = async (e?: React.FormEvent) => {
     }
 
     try {
-      // Pointing to your NEW manual SMS withdrawal route!
       const res = await fetch("/api/withdraw", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -215,7 +228,6 @@ const handleMpesaSubmit = async (e?: React.FormEvent) => {
         }
         setWithdrawAmount("");
         
-        // Refresh transactions to show the new withdrawal instantly
         const { data: txns } = await supabase
           .from("transactions")
           .select("*")
@@ -383,29 +395,29 @@ const handleMpesaSubmit = async (e?: React.FormEvent) => {
                 </div>
 
                 {/* 3. INVITE LINK */}
-          <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-green-50 text-green-600 rounded-xl"><Users className="h-6 w-6" /></div>
-                <h3 className="text-xl font-bold text-gray-900">Your Invite Link</h3>
-              </div>
-              <div className="bg-gray-100 text-gray-600 px-3 py-1 rounded-lg text-xs font-bold uppercase">Active</div>
-            </div>
-            <p className="text-gray-500 text-sm mb-6">Share this link. Earn commissions passively when your friends join and invite others.</p>
-            <div className="flex flex-col sm:flex-row bg-gray-50 border border-gray-200 rounded-xl p-2 shadow-inner gap-2">
-              <input 
-                readOnly 
-                value={`${siteUrl}/auth/signup?ref=${stats?.referral_code}`} 
-                className="bg-transparent flex-1 px-3 py-2 text-sm outline-none font-medium text-gray-700 min-w-0 truncate" 
-              />
-              <button 
-                onClick={copyToClipboard} 
-                className="bg-black hover:bg-gray-800 text-white px-6 py-3 rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition-colors shrink-0 w-full sm:w-auto"
-              >
-                {copied ? <><Check className="h-4 w-4"/> Copied!</> : <><Copy className="h-4 w-4"/> Copy Link</>}
-              </button>
-            </div>
-          </div>
+                <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100">
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-3">
+                      <div className="p-3 bg-green-50 text-green-600 rounded-xl"><Users className="h-6 w-6" /></div>
+                      <h3 className="text-xl font-bold text-gray-900">Your Invite Link</h3>
+                    </div>
+                    <div className="bg-gray-100 text-gray-600 px-3 py-1 rounded-lg text-xs font-bold uppercase">Active</div>
+                  </div>
+                  <p className="text-gray-500 text-sm mb-6">Share this link. Earn commissions passively when your friends join and invite others.</p>
+                  <div className="flex flex-col sm:flex-row bg-gray-50 border border-gray-200 rounded-xl p-2 shadow-inner gap-2">
+                    <input 
+                      readOnly 
+                      value={`${siteUrl}/auth/signup?ref=${stats?.referral_code}`} 
+                      className="bg-transparent flex-1 px-3 py-2 text-sm outline-none font-medium text-gray-700 min-w-0 truncate" 
+                    />
+                    <button 
+                      onClick={copyToClipboard} 
+                      className="bg-black hover:bg-gray-800 text-white px-6 py-3 rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition-colors shrink-0 w-full sm:w-auto"
+                    >
+                      {copied ? <><Check className="h-4 w-4"/> Copied!</> : <><Copy className="h-4 w-4"/> Copy Link</>}
+                    </button>
+                  </div>
+                </div>
 
                 {/* 4. TRANSACTION LEDGER */}
                 <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
@@ -430,9 +442,7 @@ const handleMpesaSubmit = async (e?: React.FormEvent) => {
                                 {txn.amount > 0 ? <TrendingUp className="h-5 w-5" /> : <ArrowDownRight className="h-5 w-5" />}
                               </div>
                               <div>
-                              {/* Find this part in your code: */}
-                              <SmartTransactionDescription description={txn.description} />
-                              
+                                <SmartTransactionDescription description={txn.description} />
                                 <p className="text-xs text-gray-500 mt-1">
                                   {new Date(txn.created_at).toLocaleDateString()}
                                 </p>
@@ -461,13 +471,13 @@ const handleMpesaSubmit = async (e?: React.FormEvent) => {
                   <div className="text-center py-8 bg-green-50 rounded-2xl border border-green-200 shadow-inner">
                     <Loader2 className="h-12 w-12 text-green-500 mx-auto animate-spin mb-4" />
                     <h3 className="text-lg font-black text-green-800 mb-1">
-                      {paymentStatus === 'loading' ? "Connecting to Secure Gateway..." : "Awaiting Payment..."}
+                      {paymentStatus === 'loading' ? "Awaiting Payment..." : "Payment Received!"}
                     </h3>
                     <p className="text-green-700 font-medium text-sm px-4 mb-4">
-                      {paymentMessage || "Please complete the payment on the next screen."}
+                      {paymentMessage || "Please complete the transaction on the secure page."}
                     </p>
                     
-                    {/* Failsafe Button: If they hit 'Back' in the browser, they can reset the UI */}
+                    {/* Failsafe Button */}
                     <button 
                       onClick={() => {
                         setPaymentStatus('idle');
@@ -493,7 +503,7 @@ const handleMpesaSubmit = async (e?: React.FormEvent) => {
                       Proceed to Secure Payment
                     </button>
                     <p className="text-[10px] text-gray-400 text-center mt-2 font-medium">
-                      You will be redirected to Paystack's secure checkout to complete your activation.
+                      You will be redirected to Paystack's checkout to complete your activation.
                     </p>
                   </div>
                 )}
