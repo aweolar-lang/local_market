@@ -62,7 +62,7 @@ export async function POST(req: Request) {
         user_id: userId,
         amount: -amount,
         transaction_type: 'withdrawal',
-        description: `Manual Withdrawal to ${targetPhone} (5% fee applied)`
+        description: `Withdrawal to ${targetPhone} (5% fee applied)`
       })
       .select()
       .single();

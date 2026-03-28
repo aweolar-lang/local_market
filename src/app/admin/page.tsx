@@ -82,7 +82,6 @@ const fetchAllData = async (adminWallet: number) => {
           grossRevenue: dbStats.gross_revenue || 0,
           usersUnclaimedMoney: dbStats.total_customers_money || 0,
           
-          // The perfect, unhackable profit number!
           platformProfit: dbStats.gross_platform_profit || 0, 
           
           adminPersonalWallet: adminWallet,
@@ -96,14 +95,18 @@ const fetchAllData = async (adminWallet: number) => {
       console.error("Network error connecting to stats API:", error);
     }
 
-    // 2. Load the Master Ledger Table (Keep exactly as is)
-    const { data: ledger } = await supabase
-      .from('transactions')
-      .select('*, profiles(username)')
-      .order('created_at', { ascending: false })
-      .limit(50);
+    try {
+      const ledgerRes = await fetch('/api/admin/get-ledger');
+      const ledgerJson = await ledgerRes.json();
       
-    if (ledger) setLedgerEntries(ledger);
+      if (ledgerJson.success) {
+        setLedgerEntries(ledgerJson.ledger);
+      } else {
+        console.error("Failed to fetch master ledger:", ledgerJson.error);
+      }
+    } catch (error) {
+      console.error("Network error connecting to ledger API:", error);
+    }
 
     setLoading(false);
   };

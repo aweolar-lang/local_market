@@ -159,8 +159,6 @@ export default function AffiliatePage() {
   useEffect(() => {
     let interval: NodeJS.Timeout;
 
-    // We only need to check if they are stuck on the page. 
-    // Usually, Paystack redirects them back, which triggers a full reload anyway.
     if (userId && !isAffiliate) {
       interval = setInterval(async () => {
         const { data } = await supabase
@@ -211,7 +209,7 @@ export default function AffiliatePage() {
       const res = await fetch("/api/paystack/initialize", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: userId }), // No phone number needed!
+        body: JSON.stringify({ userId: userId }),
       });
       const data = await res.json();
       
@@ -398,7 +396,7 @@ export default function AffiliatePage() {
                             max={stats?.wallet_balance || 0}
                             value={withdrawAmount}
                             onChange={(e) => setWithdrawAmount(e.target.value)}
-                            placeholder="0.00"
+                            placeholder="150.00"
                             disabled={withdrawStatus === 'loading'}
                             className="w-full pl-14 pr-4 py-4 bg-gray-50 text-black border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 font-black text-lg transition-all disabled:opacity-50"
                           />
