@@ -79,6 +79,7 @@ export default function AffiliatePage() {
   const [paymentStatus, setPaymentStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [paymentMessage, setPaymentMessage] = useState("");
   const [cooldownSeconds, setCooldownSeconds] = useState(0);
+  const [pendingWithdrawalAmt, setPendingWithdrawalAmt] = useState(0);
   
   const [withdrawAmount, setWithdrawAmount] = useState("");
   const [withdrawStatus, setWithdrawStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
@@ -134,6 +135,21 @@ export default function AffiliatePage() {
       if (txns) setTransactions(txns);
       
       setLoading(false);
+
+      // FETCH PENDING WITHDRAWALS TO REASSURE THE USER
+      const { data: pendingData } = await supabase
+        .from('withdrawals2')
+        .select('amount')
+        .eq('user_id', secureProfile.id)
+        .eq('status', 'processing');
+
+      if (pendingData && pendingData.length > 0) {
+        // Add up any processing withdrawals
+        const totalPending = pendingData.reduce((sum, w) => sum + Number(w.amount), 0);
+        setPendingWithdrawalAmt(totalPending);
+      } else {
+        setPendingWithdrawalAmt(0);
+      }
     };
 
     fetchData();
@@ -331,7 +347,7 @@ export default function AffiliatePage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
           {/* LEFT COLUMN: MAIN ACTIONS */}
-          <div className="lg:col-span-2 space-y-6">
+         <div className="lg:col-span-2 space-y-6">
             
             {isAffiliate ? (
               <>
@@ -348,8 +364,21 @@ export default function AffiliatePage() {
                     </h1>
                   </div>
                 </div>
+                
+                {pendingWithdrawalAmt > 0 && (
+                  <div className="bg-orange-50 border border-orange-200 p-5 rounded-3xl flex items-center gap-4 shadow-sm animate-pulse">
+                    <div className="bg-orange-100 p-3 rounded-full shrink-0">
+                      <Loader2 className="h-6 w-6 text-orange-600 animate-spin" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-orange-900">Withdrawal Processing</h4>
+                      <p className="text-sm text-orange-800">
+                        Your payout of <span className="font-black">Ksh {pendingWithdrawalAmt}</span> is currently being processed by our admins and will arrive in your M-Pesa shortly.
+                      </p>
+                    </div>
+                  </div>
+                )}
 
-                {/* 2. WITHDRAWAL CARD */}
                 <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 md:p-8">
                   <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
                     <Zap className="h-5 w-5 text-orange-500" />

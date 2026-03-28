@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { Resend } from 'resend'; // <-- Add this
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -114,8 +117,34 @@ export async function POST(req: Request) {
       } catch (smsError) {
         console.error("Admin SMS Failed (but withdrawal saved):", smsError);
       }
+
     } else {
-      console.warn("SMS skipped: Missing Africa's Talking ENV variables.");
+      console.warn("SMS skipped");
+    }
+
+    if (process.env.RESEND_API_KEY && process.env.ADMIN_EMAIL) {
+      try {
+        await resend.emails.send({
+          from: 'Acme <onboarding@resend.dev>', // Resend's free testing email
+          to: [process.env.ADMIN_EMAIL],
+          subject: `🚨 Action Required: Ksh ${amountToSendToMpesa} Withdrawal`,
+          html: `
+            <div style="font-family: sans-serif; padding: 20px;">
+              <h2>New Withdrawal Request!</h2>
+              <p>A user just requested a payout. Here are the details:</p>
+              <ul>
+                <li><strong>Send this amount:</strong> Ksh ${amountToSendToMpesa}</li>
+                <li><strong>To this M-Pesa Number:</strong> ${targetPhone}</li>
+                <li><strong>Original Request:</strong> Ksh ${amount} (5% fee kept)</li>
+              </ul>
+              <p>Log in to your Admin Panel to process the payment.</p>
+            </div>
+          `,
+        });
+        console.log("Admin email sent successfully!");
+      } catch (emailError) {
+        console.error("Admin Email Failed:", emailError);
+      }
     }
 
     return NextResponse.json({ 

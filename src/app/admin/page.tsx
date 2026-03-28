@@ -67,28 +67,33 @@ export default function AdminDashboard() {
 
 
 const fetchAllData = async (adminWallet: number) => {
-    // 1. Fetch EVERYTHING instantly from the new Super Ledger
-    const { data: dbStats, error: statsError } = await supabase
-      .from('super_ledger')
-      .select('*')
-      .single();
+    try {
+      // 1. Securely ask the backend for the Super Ledger stats
+      const res = await fetch('/api/admin/get-stats');
+      const json = await res.json();
 
-    if (dbStats && !statsError) {
-      setStats({
-        totalUsers: dbStats.total_registered_users || 0,
-        affiliates: dbStats.active_paid_users || 0,
-        directJoins: dbStats.direct_joins || 0,
-        referredJoins: dbStats.referred_joins || 0,
-        grossRevenue: dbStats.gross_revenue || 0,
-        usersUnclaimedMoney: dbStats.total_customers_money || 0,
-        
-        // IT JUST READS THE PERFECT NUMBER DIRECTLY FROM THE DB!
-        platformProfit: dbStats.gross_platform_profit || 0, 
-        
-        adminPersonalWallet: adminWallet,
-        totalAdmins: dbStats.total_admins || 0,
-        totalFounders: dbStats.total_founders || 0,
-      });
+      if (json.success && json.data) {
+        const dbStats = json.data;
+        setStats({
+          totalUsers: dbStats.total_registered_users || 0,
+          affiliates: dbStats.active_paid_users || 0,
+          directJoins: dbStats.direct_joins || 0,
+          referredJoins: dbStats.referred_joins || 0,
+          grossRevenue: dbStats.gross_revenue || 0,
+          usersUnclaimedMoney: dbStats.total_customers_money || 0,
+          
+          // The perfect, unhackable profit number!
+          platformProfit: dbStats.gross_platform_profit || 0, 
+          
+          adminPersonalWallet: adminWallet,
+          totalAdmins: dbStats.total_admins || 0,
+          totalFounders: dbStats.total_founders || 0,
+        });
+      } else {
+        console.error("Failed to fetch super ledger:", json.error);
+      }
+    } catch (error) {
+      console.error("Network error connecting to stats API:", error);
     }
 
     // 2. Load the Master Ledger Table (Keep exactly as is)
