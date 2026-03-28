@@ -64,23 +64,14 @@ export default function AdminDashboard() {
     setIsAuthorized(true);
     await fetchAllData(currentUser.wallet_balance || 0);
   };
+
+
 const fetchAllData = async (adminWallet: number) => {
-    // 1. Fetch from the new Master Ledger View
+    // 1. Fetch EVERYTHING instantly from the new Super Ledger
     const { data: dbStats, error: statsError } = await supabase
-      .from('system_master_ledger')
+      .from('super_ledger')
       .select('*')
       .single();
-
-    const { data: allWithdrawals } = await supabase
-      .from('withdrawals2')
-      .select('*, profiles(username)')
-      .order('created_at', { ascending: false });
-
-    const pendingList = allWithdrawals?.filter(w => w.status === 'processing') || [];
-    
-    // Calculate the total money that has left the building (Completed + Processing)
-    const totalWithdrawnAmount = allWithdrawals?.filter(w => w.status === 'completed' || w.status === 'processing')
-      .reduce((sum, w) => sum + Number(w.amount), 0) || 0;
 
     if (dbStats && !statsError) {
       setStats({
@@ -90,15 +81,17 @@ const fetchAllData = async (adminWallet: number) => {
         referredJoins: dbStats.referred_joins || 0,
         grossRevenue: dbStats.gross_revenue || 0,
         usersUnclaimedMoney: dbStats.total_customers_money || 0,
-        platformProfit: (dbStats.gross_platform_profit || 0) - totalWithdrawnAmount, 
+        
+        // IT JUST READS THE PERFECT NUMBER DIRECTLY FROM THE DB!
+        platformProfit: dbStats.gross_platform_profit || 0, 
+        
         adminPersonalWallet: adminWallet,
         totalAdmins: dbStats.total_admins || 0,
         totalFounders: dbStats.total_founders || 0,
       });
     }
 
-    setPendingWithdrawals(pendingList);
-
+    // 2. Load the Master Ledger Table (Keep exactly as is)
     const { data: ledger } = await supabase
       .from('transactions')
       .select('*, profiles(username)')
@@ -109,7 +102,6 @@ const fetchAllData = async (adminWallet: number) => {
 
     setLoading(false);
   };
-  
 
   // MARK A WITHDRAWAL AS PAID (Kept as a manual fallback just in case Safaricom B2C fails)
   const handleMarkAsPaid = async (withdrawalId: string) => {
