@@ -11,11 +11,21 @@ export default function AdminWithdrawals() {
 
   const fetchPending = async () => {
     setLoading(true);
-    const { data } = await supabase
+    
+    // We added 'error' here to catch what Supabase is complaining about
+    const { data, error } = await supabase
       .from("withdrawals2")
       .select("*, profiles(phone_number, username)")
       .eq("status", "processing")
       .order("created_at", { ascending: true });
+    
+    // If Supabase throws a wall, we want to know about it!
+    if (error) {
+      console.error("Supabase Error:", error);
+      alert("Database Error: " + error.message);
+    }
+    
+    console.log("Fetched data:", data); // Check your browser console!
     
     setWithdrawals(data || []);
     setLoading(false);
