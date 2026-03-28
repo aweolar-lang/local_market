@@ -97,6 +97,7 @@ export async function POST(req: Request) {
           username: process.env.AFRICASTALKING_USERNAME,
           to: process.env.ADMIN_PHONE_NUMBER, 
           message: `NEW WITHDRAWAL: Send KSH ${amountToSendToMpesa} to ${targetPhone}. Log in to admin panel to mark as processing.`,
+          from: "AFRICASTKNG"
         });
 
         const smsRes = await fetch('https://api.africastalking.com/version1/messaging', {
@@ -125,7 +126,7 @@ export async function POST(req: Request) {
     if (process.env.RESEND_API_KEY && process.env.ADMIN_EMAIL) {
       try {
         await resend.emails.send({
-          from: 'Acme <onboarding@resend.dev>', // Resend's free testing email
+          from: 'Acme <onboarding@resend.dev>',
           to: [process.env.ADMIN_EMAIL],
           subject: `🚨 Action Required: Ksh ${amountToSendToMpesa} Withdrawal`,
           html: `
