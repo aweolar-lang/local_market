@@ -44,7 +44,7 @@ export default function AdminWithdrawals() {
       body: JSON.stringify({ 
         withdrawalId: id, 
         action, 
-        reason: action === 'reject' ? 'Number invalid or flagged' : '' 
+        reason: action === 'reject' ? 'Failed' : '' 
       })
     });
 
