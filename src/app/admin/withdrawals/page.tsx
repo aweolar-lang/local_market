@@ -9,25 +9,24 @@ export default function AdminWithdrawals() {
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
 
-  const fetchPending = async () => {
+ const fetchPending = async () => {
     setLoading(true);
     
-    // We added 'error' here to catch what Supabase is complaining about
-    const { data, error } = await supabase
-      .from("withdrawals2")
-      .select("*, profiles(phone_number, username)")
-      .eq("status", "processing")
-      .order("created_at", { ascending: true });
-    
-    // If Supabase throws a wall, we want to know about it!
-    if (error) {
-      console.error("Supabase Error:", error);
-      alert("Database Error: " + error.message);
+    try {
+      // Call our new VIP API route instead of querying Supabase directly
+      const res = await fetch('/api/admin/get-withdrawals');
+      const data = await res.json();
+      
+      if (data.success) {
+        setWithdrawals(data.withdrawals);
+      } else {
+        alert("Server Error: " + data.error);
+      }
+    } catch (error) {
+      console.error("Network Error:", error);
+      alert("Failed to connect to the server.");
     }
     
-    console.log("Fetched data:", data); // Check your browser console!
-    
-    setWithdrawals(data || []);
     setLoading(false);
   };
 
