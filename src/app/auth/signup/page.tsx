@@ -81,6 +81,7 @@ function SignUpForm() {
             required
             value={phoneNumber}
             onChange={(e) => setPhoneNumber(e.target.value)}
+            minLength={10}
             maxLength={13}
             placeholder="0712345678" 
             className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 outline-none"
