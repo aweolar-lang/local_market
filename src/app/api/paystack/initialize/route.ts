@@ -59,7 +59,7 @@ export async function POST(req: Request) {
       },
       body: JSON.stringify({
         email: userEmail,
-        amount: 300 * 100,
+        amount: 400 * 100,
         currency: "KES",
         callback_url: `${process.env.NEXT_PUBLIC_SITE_URL}/affiliate`,
         metadata: {
